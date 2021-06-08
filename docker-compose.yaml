@@ -1,0 +1,18 @@
+version: "3"
+services:
+
+ django_ajax:
+  build:
+   context: ./
+  volumes:
+   - ./django_examples/:/app
+   - ./ajax_helpers/:/ajax/ajax_helpers
+   - /var/run/docker.sock:/var/run/docker.sock
+  command: bash -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8008"
+  environment:
+   - PYTHONPATH=/ajax
+  ports:
+   - 8008:8008
+
+
+

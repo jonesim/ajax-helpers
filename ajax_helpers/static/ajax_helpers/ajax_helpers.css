@@ -1,0 +1,10 @@
+div.ajax-tooltip {
+    max-width: 600px;
+    background-color: #fff;
+    color: #444;
+    border: 1px solid #aaa;
+}
+
+div.tooltip.show {
+    opacity: 1;
+}
