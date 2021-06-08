@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'ajax_helpers',
-    'crispy_forms',
     'examples',
 ]
 

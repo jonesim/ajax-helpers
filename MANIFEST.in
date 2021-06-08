@@ -1,2 +1,2 @@
-recursive-include django_modals *
-recursive-exclude django_modals *.pyc
+recursive-include ajax_helpers *
+recursive-exclude ajax_helpers *.pyc
