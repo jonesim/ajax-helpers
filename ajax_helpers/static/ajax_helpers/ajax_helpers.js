@@ -169,7 +169,7 @@ if (typeof ajax_helpers === 'undefined') {
                         return
                     }
                     tooltip_start = true
-                    var tooltip_container = $(selector)
+                    var tooltip_container = $(this)
                     $.ajax({
                         url: url,
                         data: this.dataset,
