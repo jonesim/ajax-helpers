@@ -67,6 +67,10 @@ class Example1(AjaxFileHelpers, ReceiveForm, AjaxHelpers, TemplateView):
     def add_to_context(self, **kwargs):
         return {'title': type(self).__name__, 'filter': filter}
 
+    def timer_demo_interval(self, **_kwargs):
+        return self.command_response('html', selector='#time_div',
+                                     html=datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
+
 
 class Example2(Example1):
 

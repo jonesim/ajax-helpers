@@ -71,10 +71,19 @@
     <p>CSS for tooltip can be specified</p>
 
     <span data-django="today" id='tooltip_div-1' class="p-2 bg-primary">HTML Tooltip</span>
-    {% tooltip_init 'tooltip_div-1' 'demo_tooltip' %}
+    {% tooltip_init '#tooltip_div-1' 'demo_tooltip' %}
 
     <span data-django="yesterday" id='tooltip_div-2' class="p-2 bg-warning">HTML Tooltip</span>
-    {% tooltip_init 'tooltip_div-2' 'demo_tooltip' 'other-class' %}
+    {% tooltip_init '#tooltip_div-2' 'demo_tooltip' 'other-class' %}
+
+    <hr>
+    <h4>Ajax Timer</h4>
+    <p>Example of a timer updating every 5 seconds while tab is visible</p>
+    <p class="pl-4">Calls a function in the view named timer_<i>name of timer</i></p>
+
+    <div id="time_div">Time should appear here</div>
+    {% ajax_timer 'demo_interval' 5000 %}
+
 </div>
 </body>
 </html>

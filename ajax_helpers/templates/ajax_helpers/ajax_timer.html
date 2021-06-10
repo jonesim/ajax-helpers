@@ -1,0 +1,7 @@
+<script>
+    setInterval(function () {
+        if (document.visibilityState === "visible") {
+            ajax_helpers.post_json({data: {"timer": "{{ name }}"}})
+        }
+    }, {{ interval }})
+</script>
