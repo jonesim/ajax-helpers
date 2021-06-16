@@ -1,3 +1,5 @@
+[![PyPI version](https://badge.fury.io/py/django-ajax-helpers.svg)](https://badge.fury.io/py/django-ajax-helpers)
+
 Helps building buttons to send data to Django views and get command back from Django
 
 Provides bootstrap tooltips populated with html from Django view
