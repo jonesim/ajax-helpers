@@ -27,7 +27,8 @@ class AjaxHelpers:
             for t in self.ajax_commands:
                 if t in response:
                     return getattr(self, f'{t}_{response[t]}')(**response)
-        return super().post(request, *args, **kwargs)
+        if hasattr(super(), 'post'):
+            return super().post(request, *args, **kwargs)
 
 
 class ReceiveForm:
