@@ -20,9 +20,11 @@ def determine_css_class(bootstrap_style, css_class):
 
 
 @register.simple_tag
-def button_javascript(button_name, **kwargs):
-    post_data = dict(button=button_name, **kwargs)
-    return f'''ajax_helpers.post_json({{data:{json.dumps(post_data)}}})'''
+def button_javascript(button_name, url_name=None, url_args=None, **kwargs):
+    json_data = {'data': dict(button=button_name, **kwargs)}
+    if url_name:
+        json_data['url'] = reverse(url_name, args=url_args)
+    return f'ajax_helpers.post_json({json.dumps(json_data)})'
 
 
 @register.simple_tag
