@@ -8,8 +8,8 @@ from django.http import JsonResponse
 class AjaxHelpers:
     ajax_commands = ['button', 'tooltip', 'timer']
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.response_commands = []
 
     def add_command(self, function_name, **kwargs):
