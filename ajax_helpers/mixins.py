@@ -13,8 +13,13 @@ class AjaxHelpers:
         self.response_commands = []
 
     def add_command(self, function_name, **kwargs):
-        kwargs['function'] = function_name
-        self.response_commands.append(kwargs)
+        if type(function_name) == list:
+            self.response_commands += function_name
+        elif type(function_name) == dict:
+            self.response_commands.append(function_name)
+        else:
+            kwargs['function'] = function_name
+            self.response_commands.append(kwargs)
 
     def command_response(self, function_name=None, **kwargs):
         if function_name is not None:
