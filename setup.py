@@ -5,7 +5,7 @@ with open("readme.md", "r") as fh:
 
 setuptools.setup(
     name="django-ajax-helpers",
-    version="0.0.5",
+    version="0.0.6",
     author="Ian Jones",
     description="Django app to assist with posting Ajax and receiving commands from django",
     long_description=long_description,
