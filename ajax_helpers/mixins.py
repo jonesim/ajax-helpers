@@ -2,6 +2,7 @@ import io
 import csv
 import json
 import codecs
+import inspect
 from django.http import JsonResponse
 
 
@@ -10,6 +11,9 @@ class AjaxHelpers:
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.command_set = set()
+        for c in inspect.getmro(self.__class__):
+            self.command_set = self.command_set | set(getattr(c,'ajax_commands', []))
         self.response_commands = []
 
     def add_command(self, function_name, **kwargs):
@@ -29,7 +33,7 @@ class AjaxHelpers:
     def post(self, request, *args, **kwargs):
         if request.is_ajax() and request.content_type == 'application/json':
             response = json.loads(request.body)
-            for t in self.ajax_commands:
+            for t in self.command_set:
                 if t in response:
                     return getattr(self, f'{t}_{response[t]}')(**response)
         if hasattr(super(), 'post'):
