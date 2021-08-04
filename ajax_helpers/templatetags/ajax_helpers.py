@@ -24,7 +24,7 @@ def button_javascript(button_name, url_name=None, url_args=None, **kwargs):
     json_data = {'data': dict(button=button_name, **kwargs)}
     if url_name:
         json_data['url'] = reverse(url_name, args=url_args)
-    return f'ajax_helpers.post_json({json.dumps(json_data)})'
+    return mark_safe(f'ajax_helpers.post_json({json.dumps(json_data)})')
 
 
 @register.simple_tag
