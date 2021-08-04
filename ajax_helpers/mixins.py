@@ -31,11 +31,17 @@ class AjaxHelpers:
         return JsonResponse(self.response_commands, safe=False)
 
     def post(self, request, *args, **kwargs):
-        if request.is_ajax() and request.content_type == 'application/json':
-            response = json.loads(request.body)
-            for t in self.command_set:
-                if t in response:
-                    return getattr(self, f'{t}_{response[t]}')(**response)
+        if request.is_ajax():
+            if request.content_type == 'application/json':
+                response = json.loads(request.body)
+            elif request.content_type == 'multipart/form-data':
+                response = request.POST
+            else:
+                response = None
+            if response:
+                for t in self.command_set:
+                    if t in response and hasattr(self, f'{t}_{response[t]}'):
+                        return getattr(self, f'{t}_{response[t]}')(**response)
         if hasattr(super(), 'post'):
             return super().post(request, *args, **kwargs)
 
