@@ -11,6 +11,8 @@ register = template.Library()
 @register.simple_tag
 def lib_include(*args, **kwargs):
     include_str = ''
+    if not args:
+        include_str = html_include(cdn=kwargs.get('cdn'), module=kwargs.get('module'))
     for a in args:
         include_str += html_include(a, cdn=kwargs.get('cdn'), module=kwargs.get('module'))
     return mark_safe(include_str)
