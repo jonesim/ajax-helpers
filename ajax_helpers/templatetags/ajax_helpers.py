@@ -1,11 +1,19 @@
 import json
 from django import template
-from django.templatetags.static import static
+from django.contrib.staticfiles.templatetags.staticfiles import static
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from ..utils import random_string
-
+from ..html_include import html_include
 register = template.Library()
+
+
+@register.simple_tag
+def lib_include(*args, **kwargs):
+    include_str = ''
+    for a in args:
+        include_str += html_include(a, cdn=kwargs.get('cdn'), module=kwargs.get('module'))
+    return mark_safe(include_str)
 
 
 @register.simple_tag
