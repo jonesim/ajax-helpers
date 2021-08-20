@@ -1,6 +1,6 @@
 from importlib import import_module, metadata
 from inspect import isclass, stack, getmodule
-from django.contrib.staticfiles.templatetags.staticfiles import static
+from django.templatetags.static import static
 from django.utils.safestring import mark_safe
 
 
