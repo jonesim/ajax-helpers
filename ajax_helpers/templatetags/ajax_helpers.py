@@ -8,13 +8,19 @@ from ..html_include import html_include
 register = template.Library()
 
 
-@register.simple_tag
-def lib_include(*args, **kwargs):
+@register.simple_tag(takes_context=True)
+def lib_include(context, *args, **kwargs):
+    request = context.get('request')
+    legacy = False
+    if request:
+        user_agent = request.META['HTTP_USER_AGENT']
+        if 'Trident' in user_agent or 'MSIE' in user_agent:
+            legacy = True
     include_str = ''
     if not args:
-        include_str = html_include(cdn=kwargs.get('cdn'), module=kwargs.get('module'))
+        include_str = html_include(cdn=kwargs.get('cdn'), module=kwargs.get('module'), legacy=legacy)
     for a in args:
-        include_str += html_include(a, cdn=kwargs.get('cdn'), module=kwargs.get('module'))
+        include_str += html_include(a, cdn=kwargs.get('cdn'), module=kwargs.get('module'), legacy=legacy)
     return mark_safe(include_str)
 
 

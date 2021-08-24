@@ -48,14 +48,20 @@ if (typeof ajax_helpers === 'undefined') {
             var content_disposition = jqXHR.getResponseHeader('Content-Disposition')
             var blob = new Blob([response], {type: "octet/stream"})
             var download_url = window.URL.createObjectURL(blob);
-            var a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = download_url;
-            a.download = content_disposition.split('"')[1];
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(download_url);
-            alert('your file has downloaded');
+            if (navigator.msSaveOrOpenBlob) {
+                var filename = content_disposition.split('"')[1]
+                navigator.msSaveOrOpenBlob(blob, filename);
+                alert('your file has downloaded');
+            } else {
+                var a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = download_url;
+                a.download = content_disposition.split('"')[1];
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(download_url);
+                alert('your file has downloaded');
+            }
         }
 
         function post_data(url, data) {

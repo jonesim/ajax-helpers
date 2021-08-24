@@ -11,15 +11,17 @@ class SourceBase:
     filename = None
     js_filename = None
     css_filename = None
+    legacy_js = None
     js_path = cdn_js_path = 'js/'
     css_path = cdn_css_path = 'css/'
     cdn_scheme = 'https://'
 
-    def __init__(self, version):
+    def __init__(self, version, legacy=False):
         self.path = None
         self._cdn = None
         self.version = version
         self._version = None
+        self.legacy = legacy
 
     @property
     def version_qs(self):
@@ -37,6 +39,8 @@ class SourceBase:
             self._cdn = cdn
 
     def _js_filename(self):
+        if self.legacy and self.legacy_js:
+            return ((self.cdn_js_path if self.cdn else self.js_path) + self.legacy_js + self.version_qs)
         return ((self.cdn_js_path if self.cdn else self.js_path) +
                 (self.js_filename if self.js_filename else self.filename + '.js') + self.version_qs)
 
@@ -65,7 +69,7 @@ class SourceBase:
         return self.javascript() + self.css()
 
 
-def html_include(library=None, cdn=False, module=None):
+def html_include(library=None, cdn=False, module=None, legacy=False):
     """
     Returns a string with javascript and css includes defined in a subclass of SourceBase in the calling module or
     defined in passed module as a module or string.
@@ -79,10 +83,10 @@ def html_include(library=None, cdn=False, module=None):
     version = getattr(module, 'version', '')
     packages = getattr(module, 'packages', None)
     if packages and library in packages:
-        return mark_safe('\n'.join([lib(version).includes(cdn) for lib in packages[library]]))
+        return mark_safe('\n'.join([lib(version, legacy).includes(cdn) for lib in packages[library]]))
     source_class = getattr(module, library, None)
     if isclass(source_class) and issubclass(source_class, SourceBase):
-        return mark_safe(source_class(version).includes(cdn))
+        return mark_safe(source_class(version, legacy).includes(cdn))
     return ''
 
 

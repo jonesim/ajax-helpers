@@ -13,6 +13,7 @@ class Jquery(SourceBase):
 class AjaxHelpers(SourceBase):
     static_path = 'ajax_helpers/'
     js_filename = 'ajax_helpers.js'
+    legacy_js = 'ajax_helpers_legacy.js'
     js_path = ''
     css_filename = 'ajax_helpers.css'
     css_path = ''
