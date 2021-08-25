@@ -17,7 +17,7 @@ class SourceBase:
     cdn_scheme = 'https://'
 
     def __init__(self, version, legacy=False):
-        self.path = None
+        self.root = None
         self._cdn = None
         self.version = version
         self._version = None
@@ -34,29 +34,44 @@ class SourceBase:
     @cdn.setter
     def cdn(self, cdn):
         if cdn != self._cdn:
-            self.path = (self.cdn_scheme + self.cdn_path) if cdn else static(self.static_path)
+            self.root = (self.cdn_scheme + self.cdn_path) if cdn else static(self.static_path)
             self._version = '?v=' + self.version if not cdn and self.version else ''
             self._cdn = cdn
 
+    def combine_filename(self, path, filename):
+        if not isinstance(filename, (tuple, list)):
+            filename = [filename]
+        return [path + f + self.version_qs for f in filename]
+
     def _js_filename(self):
         if self.legacy and self.legacy_js:
-            return ((self.cdn_js_path if self.cdn else self.js_path) + self.legacy_js + self.version_qs)
-        return ((self.cdn_js_path if self.cdn else self.js_path) +
-                (self.js_filename if self.js_filename else self.filename + '.js') + self.version_qs)
+            filename = self.legacy_js
+        elif self.js_filename:
+            filename = self.js_filename
+        elif isinstance(self.filename, (tuple, list)):
+            filename = [f + '.js' for f in self.filename]
+        elif self.filename:
+            filename = self.filename + '.js'
+        else:
+            return []
+        return self.combine_filename(self.cdn_js_path if self.cdn else self.js_path, filename)
 
     def _css_filename(self):
-        return ((self.cdn_css_path if self.cdn else self.css_path) +
-                (self.css_filename if self.css_filename else self.filename + '.css') + self.version_qs)
+        if self.css_filename:
+            filename = self.css_filename
+        elif isinstance(self.filename, (tuple, list)):
+            filename = [f + '.css' for f in self.filename]
+        elif self.filename:
+            filename = self.filename + '.css'
+        else:
+            return []
+        return self.combine_filename(self.cdn_css_path if self.cdn else self.css_path, filename)
 
     def javascript(self):
-        if not self.js_filename and not self.filename:
-            return ''
-        return f'<script src="{self.path + self._js_filename()}"></script>'
+        return ''.join([f'<script src="{self.root + f}"></script>' for f in self._js_filename()])
 
     def css(self):
-        if not self.css_filename and not self.filename:
-            return ''
-        return f'<link href="{self.path + self._css_filename()}" rel="stylesheet">'
+        return ''.join([f'<link href="{self.root + f}" rel="stylesheet">' for f in self._css_filename()])
 
     def includes(self, cdn=False):
         cdn = cdn or False
