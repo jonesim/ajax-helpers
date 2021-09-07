@@ -26,7 +26,11 @@ if (typeof ajax_helpers === 'undefined') {
       return cookieValue;
     }
 
-    function send_form(form_id, extra_data) {
+    function send_form(form_id, extra_data, timeout) {
+      if (timeout === undefined) {
+        var timout = 0;
+      }
+
       var data;
 
       if (form_id != null) {
@@ -42,7 +46,7 @@ if (typeof ajax_helpers === 'undefined') {
         }
       }
 
-      ajax_helpers.post_data(ajax_helpers.window_location, data);
+      ajax_helpers.post_data(ajax_helpers.window_location, data, timeout);
     }
 
     function contains_file(jqXHR) {
@@ -62,7 +66,7 @@ if (typeof ajax_helpers === 'undefined') {
       var download_url = window.URL.createObjectURL(blob);
 
       if (navigator.msSaveOrOpenBlob) {
-        var filename = content_disposition.split('"')[1]
+        var filename = content_disposition.split('"')[1];
         navigator.msSaveOrOpenBlob(blob, filename);
         alert('your file has downloaded');
       } else {
@@ -77,7 +81,11 @@ if (typeof ajax_helpers === 'undefined') {
       }
     }
 
-    function post_data(url, data) {
+    function post_data(url, data, timeout) {
+      if (timeout === undefined) {
+        var timout = 0;
+      }
+
       $.ajax({
         url: url,
         method: 'post',
@@ -86,11 +94,16 @@ if (typeof ajax_helpers === 'undefined') {
         cache: false,
         contentType: false,
         processData: false,
-        success: from_django
+        success: from_django,
+        timeout: timout
       });
     }
 
-    function post_json(ajax_data) {
+    function post_json(ajax_data, timeout) {
+      if (timeout === undefined) {
+        var timout = 0;
+      }
+
       var url, data, success;
 
       if (_typeof(ajax_data) === 'object') {
@@ -122,7 +135,8 @@ if (typeof ajax_helpers === 'undefined') {
         contentType: 'application/json',
         beforeSend: add_CSRF,
         cache: false,
-        success: success
+        success: success,
+        timout: timout
       });
     }
 
@@ -223,6 +237,27 @@ if (typeof ajax_helpers === 'undefined') {
         });
       }
     };
+
+    function set_ajax_busy(status, pointer_wait) {
+      if (typeof pointer_wait === 'undefined') {
+        var pointer_wait = false;
+      }
+
+      if (status === true) {
+        ajax_helpers.ajax_busy = true;
+
+        if (pointer_wait) {
+          $("html").addClass("wait");
+        }
+      } else {
+        ajax_helpers.ajax_busy = false;
+
+        if (pointer_wait) {
+          $("html").removeClass("wait");
+        }
+      }
+    }
+
     var command_functions = {
       html: function html(command) {
         var element = $(command.selector);
@@ -244,6 +279,10 @@ if (typeof ajax_helpers === 'undefined') {
         alert(command.text);
       }
     };
+    $(document).ajaxError(function () {
+      $("html").removeClass("wait");
+      ajax_helpers.ajax_busy = false;
+    });
     return {
       getCookie: getCookie,
       get_content: get_content,
@@ -254,7 +293,8 @@ if (typeof ajax_helpers === 'undefined') {
       command_functions: command_functions,
       process_commands: process_commands,
       tooltip: tooltip,
-      ajax_busy: ajax_busy
+      ajax_busy: ajax_busy,
+      set_ajax_busy: set_ajax_busy
     };
   }();
 }

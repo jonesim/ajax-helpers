@@ -1,3 +1,5 @@
+html.wait, html.wait * { cursor: wait !important; }
+
 div.ajax-tooltip {
     max-width: 600px;
     background-color: #fff;
