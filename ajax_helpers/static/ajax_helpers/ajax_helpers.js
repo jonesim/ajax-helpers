@@ -228,6 +228,18 @@ if (typeof ajax_helpers === 'undefined') {
 
         var command_functions = {
 
+            set_prop: function(command){
+                $(command.selector).prop(command.prop, command.val)
+            },
+
+            set_attr: function(command){
+                $(command.selector).attr(command.attr, command.val)
+            },
+
+            set_value: function(command){
+                $(command.selector).val(command.val)
+            },
+
             html: function (command) {
                 var element = $(command.selector)
                 if (command.parent === true){
