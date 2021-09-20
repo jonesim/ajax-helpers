@@ -38,7 +38,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'ajax_helpers',
-    'examples',
+    'ajax_examples',
+    'show_src_code',
+    'django_menus',
+    'django_modals',
 ]
 
 MIDDLEWARE = [
