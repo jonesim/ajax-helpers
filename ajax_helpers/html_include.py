@@ -106,4 +106,7 @@ def html_include(library=None, cdn=False, module=None, legacy=False):
 
 
 def pip_version(package):
-    return metadata.version(package)
+    try:
+        return metadata.version(package)
+    except metadata.PackageNotFoundError:
+        return 'local'
