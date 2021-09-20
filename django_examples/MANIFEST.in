@@ -1,0 +1,2 @@
+recursive-include ajax_examples *
+recursive-exclude ajax_examples *.pyc
