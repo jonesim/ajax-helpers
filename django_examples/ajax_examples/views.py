@@ -4,6 +4,15 @@ from django.http import HttpResponse
 from django.views.generic import TemplateView
 from django.urls import reverse
 from ajax_helpers.mixins import AjaxHelpers, ReceiveForm, AjaxFileHelpers
+from django_menus.menu import MenuMixin
+from show_src_code.view_mixins import DemoViewMixin
+
+
+class MainMenu(DemoViewMixin, MenuMixin):
+
+    def setup_menu(self):
+        super().setup_menu()
+        self.add_menu('main_menu').add_items('ajax_main')
 
 
 class TestForm(forms.Form):
@@ -11,7 +20,7 @@ class TestForm(forms.Form):
 
 
 class ToolTip(TemplateView):
-    template_name = 'tooltip_template.html'
+    template_name = 'ajax_examples/tooltip_template.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -24,9 +33,9 @@ class ToolTip(TemplateView):
         return context
 
 
-class Example1(AjaxFileHelpers, ReceiveForm, AjaxHelpers, TemplateView):
+class Example1(MainMenu, AjaxFileHelpers, ReceiveForm, AjaxHelpers, TemplateView):
 
-    template_name = 'base.html'
+    template_name = 'ajax_examples/base.html'
 
     def button_redirect(self, **kwargs):
         self.add_command('message', text='Will redirect after this message')
@@ -74,4 +83,4 @@ class Example1(AjaxFileHelpers, ReceiveForm, AjaxHelpers, TemplateView):
 
 class Example2(Example1):
 
-    template_name = 'redirect.html'
+    template_name = 'ajax_examples/redirect.html'

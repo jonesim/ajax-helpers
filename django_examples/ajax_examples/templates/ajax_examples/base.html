@@ -1,15 +1,39 @@
 <!doctype html>
-{% load static ajax_helpers %}
+{% load static ajax_helpers src_code %}
 
 <html>
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     {% lib_include 'ajax_helpers' 'Bootstrap' 'FontAwesome' module='ajax_helpers.includes' %}
+    {% lib_include 'Modals' 'Toggle' 'select2' 'JQueryUI' 'TinyMce' module='django_modals.includes' %}
+    {% lib_include module='django_menus.includes' %}
+    {% lib_include module='show_src_code.includes' %}
 </head>
 
 <body>
 
-<div class="p-4">
 
+<nav class="navbar navbar-expand-lg bg-dark navbar-dark active-bar">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        {{ menus.main_menu.render }}
+    </div>
+    <div class="text-light">
+        {{ menus.user_menu.render }}
+    </div>
+</nav>
+
+
+<div class="m-1 text-right">
+    <img src="{{ version_img }}">
+    <a class="btn btn-outline-secondary btn-sm" href="{{ home_page }}"><i class="fab fa-github text-dark"></i>GitHub</a>
+    {% show_src_code 'show_src_code:source_code_modal' view_class %}
+</div>
+<div class="p-4">
     {% block extra-title %}
     {% endblock %}
 
