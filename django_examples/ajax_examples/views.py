@@ -1,8 +1,13 @@
 import datetime
+from io import BytesIO
+
 from django import forms
 from django.http import HttpResponse
+from django.views import View
 from django.views.generic import TemplateView
 from django.urls import reverse
+from openpyxl import Workbook
+
 from ajax_helpers.mixins import AjaxHelpers, ReceiveForm, AjaxFileHelpers
 from django_menus.menu import MenuMixin
 from show_src_code.view_mixins import DemoViewMixin
@@ -65,6 +70,23 @@ class Example1(MainMenu, AjaxFileHelpers, ReceiveForm, AjaxHelpers, TemplateView
         response.write('text file data')
         return response
 
+    @staticmethod
+    def button_download_excel(**kwargs):
+        workbook = Workbook()
+        sheet = workbook.active
+        sheet.append(['hello', 'world'])
+        filename = 'test.xlsx'
+        output = BytesIO()
+        workbook.save(output)
+        output.seek(0)
+        response = HttpResponse(content_type='application/ms-excel')
+        # Providing extra download information for the user's browser.
+        response['Content-Disposition'] = 'attachment; filename="%s"' % filename
+        response.write(output.read())
+
+        return response
+
+
     def file_upload(self, file):
         return self.command_response('message', text=f'Received {file.name} size {file.size}')
 
@@ -84,3 +106,20 @@ class Example1(MainMenu, AjaxFileHelpers, ReceiveForm, AjaxHelpers, TemplateView
 class Example2(Example1):
 
     template_name = 'ajax_examples/redirect.html'
+
+
+class DownloadTest(View):
+    def get(self, request):
+        workbook = Workbook()
+        sheet = workbook.active
+        sheet.append(['hello', 'world'])
+        filename = 'test.xlsx'
+        output = BytesIO()
+        workbook.save(output)
+        output.seek(0)
+        response = HttpResponse(content_type='application/ms-excel')
+        # Providing extra download information for the user's browser.
+        response['Content-Disposition'] = 'attachment; filename="%s"' % filename
+        response.write(output.read())
+
+        return response

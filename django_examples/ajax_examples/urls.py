@@ -7,5 +7,6 @@ urlpatterns = [
     path('ajax-redirect/', RedirectView.as_view(pattern_name='ajax_main', ), name='django-ajax-helpers'),
     path('ajax_example', views.Example1.as_view(), name='ajax_main'),
     path('redirect', views.Example2.as_view(), name='redirect'),
-    path('tooltip/', views.ToolTip.as_view(), name='demo_tooltip')
+    path('tooltip/', views.ToolTip.as_view(), name='demo_tooltip'),
+    path('download/', views.DownloadTest.as_view(), name='download')
 ]
