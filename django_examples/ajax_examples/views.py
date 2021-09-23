@@ -64,14 +64,14 @@ class Example1(MainMenu, AjaxFileHelpers, ReceiveForm, AjaxHelpers, TemplateView
             return self.command_response('html', selector='#django_form_id', html=a.as_p())
 
     @staticmethod
-    def button_download(**kwargs):
+    def button_download_text(**kwargs):
         response = HttpResponse(content_type='text/plain')
         response['Content-Disposition'] = 'attachment; filename="text.txt"'
         response.write('text file data')
         return response
 
     @staticmethod
-    def button_download_excel(**kwargs):
+    def button_download_blob(**kwargs):
         workbook = Workbook()
         sheet = workbook.active
         sheet.append(['hello', 'world'])
@@ -83,9 +83,19 @@ class Example1(MainMenu, AjaxFileHelpers, ReceiveForm, AjaxHelpers, TemplateView
         # Providing extra download information for the user's browser.
         response['Content-Disposition'] = 'attachment; filename="%s"' % filename
         response.write(output.read())
-
         return response
 
+    def button_download_base64(self, **kwargs):
+        workbook = Workbook()
+        sheet = workbook.active
+        sheet.append(['hello', 'world'])
+        filename = 'test_base64.xlsx'
+        output = BytesIO()
+        workbook.save(output)
+        output.seek(0)
+        import base64
+        return self.command_response('save_file', data=base64.b64encode(output.read()).decode('ascii'),
+                                     filename=filename)
 
     def file_upload(self, file):
         return self.command_response('message', text=f'Received {file.name} size {file.size}')
