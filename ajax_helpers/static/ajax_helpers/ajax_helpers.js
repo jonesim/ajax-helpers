@@ -20,7 +20,9 @@ if (typeof ajax_helpers === 'undefined') {
         }
 
         function send_form(form_id, extra_data, timeout) {
-            if (timeout === undefined) {var timout = 0}
+            if (timeout === undefined) {
+                var timout = 0
+            }
             var data;
             if (form_id != null) {
                 var form = $('#' + form_id);
@@ -45,28 +47,40 @@ if (typeof ajax_helpers === 'undefined') {
             xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
         }
 
-        function download_file(jqXHR, response) {
-            var content_disposition = jqXHR.getResponseHeader('Content-Disposition');
-            var blob = new Blob([response], {type: "octet/stream"});
-            var download_url = window.URL.createObjectURL(blob);
+        function download_blob(filename, blob) {
             if (navigator.msSaveOrOpenBlob) {
-                var filename = content_disposition.split('"')[1];
                 navigator.msSaveOrOpenBlob(blob, filename);
-                alert('your file has downloaded');
             } else {
+                var download_url = window.URL.createObjectURL(blob);
                 var a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = download_url;
-                a.download = content_disposition.split('"')[1];
+                a.download = filename;
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(download_url);
-                alert('your file has downloaded');
             }
         }
 
+        function download_file(jqXHR, response) {
+            var filename, blob;
+            var content_disposition = jqXHR.getResponseHeader('Content-Disposition');
+            var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+            var matches = filenameRegex.exec(content_disposition);
+            if (matches != null && matches[1]) filename = matches[1].replace(/['"]/g, '');
+            if (typeof (response) === 'object') {
+                blob = response;
+            } else {
+                blob = new Blob([response], {type: "octet/stream"});
+            }
+            download_blob(filename, blob)
+            alert('your file has downloaded');
+        }
+
         function post_data(url, data, timeout) {
-            if (timeout === undefined) {var timout = 0}
+            if (timeout === undefined) {
+                var timout = 0
+            }
             $.ajax(
                 {
                     url: url,
@@ -82,21 +96,27 @@ if (typeof ajax_helpers === 'undefined') {
         }
 
         function post_json(ajax_data, timeout) {
-            if (timeout === undefined) {var timout = 0}
+            if (timeout === undefined) {
+                var timout = 0
+            }
             var url, data, success
-            if (typeof(ajax_data) === 'object'){
-                if (ajax_data.url !== undefined){
+            var response_type = 'text'
+            if (typeof (ajax_data) === 'object') {
+                if (ajax_data.url !== undefined) {
                     url = ajax_data.url
                 }
                 data = ajax_data.data
-                if (ajax_data.success !== undefined){
+                if (ajax_data.success !== undefined) {
                     success = ajax_data.success
                 }
-            } else{
+                if (ajax_data.response_type !== undefined) {
+                    response_type = ajax_data.response_type;
+                }
+            } else {
                 data = ajax_data
             }
 
-            if (success === undefined){
+            if (success === undefined) {
                 success = from_django
             }
 
@@ -114,6 +134,7 @@ if (typeof ajax_helpers === 'undefined') {
                     cache: false,
                     success: success,
                     timout: timout,
+                    xhrFields: {responseType: response_type},
                 });
         }
 
@@ -160,7 +181,7 @@ if (typeof ajax_helpers === 'undefined') {
         }
 
         var tooltip = {
-            init: function (selector, url, css_class='ajax-tooltip') {
+            init: function (selector, url, css_class = 'ajax-tooltip') {
                 var tooltip_start = false
 
                 $(selector).hover(function () {
@@ -209,18 +230,18 @@ if (typeof ajax_helpers === 'undefined') {
             }
         }
 
-        function set_ajax_busy(status, pointer_wait){
-            if (typeof pointer_wait === 'undefined'){
+        function set_ajax_busy(status, pointer_wait) {
+            if (typeof pointer_wait === 'undefined') {
                 var pointer_wait = false
             }
-            if (status === true){
+            if (status === true) {
                 ajax_helpers.ajax_busy = true
-                if (pointer_wait){
+                if (pointer_wait) {
                     $("html").addClass("wait")
                 }
             } else {
                 ajax_helpers.ajax_busy = false
-                if (pointer_wait){
+                if (pointer_wait) {
                     $("html").removeClass("wait")
                 }
             }
@@ -228,21 +249,32 @@ if (typeof ajax_helpers === 'undefined') {
 
         var command_functions = {
 
-            set_prop: function(command){
+            save_file: function (command) {
+                var byte_chars = atob(command.data)
+                var byte_numbers = [];
+                for (var i = 0; i < byte_chars.length; i++) {
+                    byte_numbers.push(byte_chars.charCodeAt(i))
+                }
+                var byte_array = new Uint8Array(byte_numbers)
+                var blob = new Blob([byte_array], {type: "octet/stream"});
+                download_blob(command.filename, blob)
+            },
+
+            set_prop: function (command) {
                 $(command.selector).prop(command.prop, command.val)
             },
 
-            set_attr: function(command){
+            set_attr: function (command) {
                 $(command.selector).attr(command.attr, command.val)
             },
 
-            set_value: function(command){
+            set_value: function (command) {
                 $(command.selector).val(command.val)
             },
 
             html: function (command) {
                 var element = $(command.selector)
-                if (command.parent === true){
+                if (command.parent === true) {
                     element = element.parent()
                 }
                 element.html(command.html)
@@ -255,12 +287,12 @@ if (typeof ajax_helpers === 'undefined') {
                 window.location.href = command.url;
             },
 
-            message: function (command){
-                    alert(command.text);
+            message: function (command) {
+                alert(command.text);
             }
         };
 
-        $(document).ajaxError(function(){
+        $(document).ajaxError(function () {
             $("html").removeClass("wait");
             ajax_helpers.ajax_busy = false
         });
