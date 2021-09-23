@@ -46,18 +46,25 @@ if (typeof ajax_helpers === 'undefined') {
         }
 
         function download_file(jqXHR, response) {
+            var filename, blob;
             var content_disposition = jqXHR.getResponseHeader('Content-Disposition');
-            var blob = new Blob([response], {type: "octet/stream"});
+            var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+            var matches = filenameRegex.exec(content_disposition);
+            if (matches != null && matches[1]) filename = matches[1].replace(/['"]/g, '');
+            if (typeof (response) ===' object'){
+                blob = response;
+            } else {
+                blob = new Blob([response], {type: "octet/stream"});
+            }
             var download_url = window.URL.createObjectURL(blob);
             if (navigator.msSaveOrOpenBlob) {
-                var filename = content_disposition.split('"')[1];
                 navigator.msSaveOrOpenBlob(blob, filename);
                 alert('your file has downloaded');
             } else {
                 var a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = download_url;
-                a.download = content_disposition.split('"')[1];
+                a.download = filename;
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(download_url);
@@ -84,6 +91,7 @@ if (typeof ajax_helpers === 'undefined') {
         function post_json(ajax_data, timeout) {
             if (timeout === undefined) {var timout = 0}
             var url, data, success
+            var response_type = 'text'
             if (typeof(ajax_data) === 'object'){
                 if (ajax_data.url !== undefined){
                     url = ajax_data.url
@@ -91,6 +99,9 @@ if (typeof ajax_helpers === 'undefined') {
                 data = ajax_data.data
                 if (ajax_data.success !== undefined){
                     success = ajax_data.success
+                }
+                if (ajax_data.response_type !== undefined){
+                    response_type = ajax_data.response_type;
                 }
             } else{
                 data = ajax_data
@@ -114,6 +125,7 @@ if (typeof ajax_helpers === 'undefined') {
                     cache: false,
                     success: success,
                     timout: timout,
+                    xhrFields:{responseType: response_type},
                 });
         }
 
