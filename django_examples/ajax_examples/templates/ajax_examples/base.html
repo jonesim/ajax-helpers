@@ -77,7 +77,11 @@
 
     <hr>
     <p>Button to download a Django View generated file </p>
-    {% ajax_button 'Download text file' 'download' %}
+    {% ajax_button 'Download text file' 'download_text' %}
+    <br><br>
+    {% ajax_button 'Download binary file using Blob' 'download_blob' blob=True %}
+    <br><br>
+    {% ajax_button 'Download binary file using Base64' 'download_base64' %}
 
     <hr>
     <p>Button to upload a file to View</p>
