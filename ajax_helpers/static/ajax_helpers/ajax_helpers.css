@@ -10,3 +10,7 @@ div.ajax-tooltip {
 div.tooltip.show {
     opacity: 1;
 }
+
+.drag_highlight {
+    background-color: #e5f3ff !important;
+}
