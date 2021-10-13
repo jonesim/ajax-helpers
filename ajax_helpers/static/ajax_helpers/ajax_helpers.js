@@ -21,7 +21,7 @@ if (typeof ajax_helpers === 'undefined') {
 
         function send_form(form_id, extra_data, timeout, options) {
             if (timeout === undefined) {
-                var timout = 0
+                var timeout = 0
             }
             var data;
             if (form_id != null) {
@@ -79,7 +79,7 @@ if (typeof ajax_helpers === 'undefined') {
 
         function post_data(url, data, timeout, options) {
             if (timeout === undefined) {
-                var timout = 0
+                var timeout = 0
             }
             var ajax_config = {
                 url: url,
@@ -90,7 +90,7 @@ if (typeof ajax_helpers === 'undefined') {
                 contentType: false,
                 processData: false,
                 success: from_django,
-                timeout: timout
+                timeout: timeout
             };
             if (options !== undefined && options.progress !== undefined) {
                 ajax_config.xhr = function () {
@@ -110,7 +110,7 @@ if (typeof ajax_helpers === 'undefined') {
 
         function post_json(ajax_data, timeout) {
             if (timeout === undefined) {
-                var timout = 0
+                var timeout = 0
             }
             var url, data, success;
             var response_type = 'text';
@@ -146,7 +146,7 @@ if (typeof ajax_helpers === 'undefined') {
                     beforeSend: add_CSRF,
                     cache: false,
                     success: success,
-                    timout: timout,
+                    timeout: timeout,
                     xhrFields: {responseType: response_type},
                 });
         }
@@ -261,6 +261,8 @@ if (typeof ajax_helpers === 'undefined') {
         }
 
         var command_functions = {
+            null: function (){
+            },
 
             delay: function (command) {
                 ajax_helpers.ajax_busy = true;
@@ -290,6 +292,19 @@ if (typeof ajax_helpers === 'undefined') {
 
             set_value: function (command) {
                 $(command.selector).val(command.val)
+            },
+
+            set_css: function (command) {
+                $(command.selector).css(command.prop, command.val)
+            },
+
+            append_to: function(command) {
+                if (command.check_id !== undefined){
+                    if ($('#' + command.check_id).length){
+                        return
+                    }
+                }
+                $(command.html).appendTo(command.element)
             },
 
             html: function (command) {
