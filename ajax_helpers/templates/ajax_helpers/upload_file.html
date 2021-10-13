@@ -1,12 +1,19 @@
-<div style="position: relative;overflow: hidden;" class="{{ css_class }}">
-    Upload file
-    <form style="position: absolute;right: 0;top: 0;cursor: hand;opacity: 0;"
-          id="{{ id }}-form">
+<div id="{{ id }}_container"{% if width or height %}
+     style="{% if width %}width:{{ width }};{% endif %}{% if height %}height:{{ height }}{% endif %}"
+        {% endif %} class="relative_overflow {{ css_class }}">
+    {{ text|default:"Upload file" }}
+    <form class="file-upload-form"
+          id="{{ id }}_form">
         <input style="cursor: pointer" id="{{ id }}" type="file" name="ajax_file">
     </form>
 </div>
 <script>
+    {% if drag_drop == 'default' %}
+        drag = new ajax_helpers.drag_drop('#{{ id }}_container')
+    {% elif drag_drop %}
+        drag = new ajax_helpers.drag_drop('{{ drag_drop }}')
+    {% endif %}
     $('#{{ id }}').change(function () {
-        ajax_helpers.send_form('{{ id }}-form')
+        ajax_helpers.upload_file('#{{ id }}')
     })
 </script>

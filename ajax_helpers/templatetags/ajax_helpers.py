@@ -64,11 +64,14 @@ def send_form_button(text, form_id, bootstrap_style='primary', css_class=None, *
 
 
 @register.inclusion_tag('ajax_helpers/upload_file.html')
-def upload_file(text='Upload File', bootstrap_style='primary', css_class=None):
+def upload_file(text='Upload File', bootstrap_style='primary', css_class=None, drag_drop=None, width=None, height=None):
     return {
         'id': random_string(),
         'text': text,
         'css_class': determine_css_class(bootstrap_style, css_class),
+        'drag_drop': drag_drop,
+        'width': width,
+        'height': height,
     }
 
 
