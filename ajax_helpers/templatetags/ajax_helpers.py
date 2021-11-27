@@ -13,7 +13,7 @@ def lib_include(context, *args, **kwargs):
     request = context.get('request')
     legacy = False
     if request:
-        user_agent = request.META['HTTP_USER_AGENT']
+        user_agent = request.META.get('HTTP_USER_AGENT', '')
         if 'Trident' in user_agent or 'MSIE' in user_agent:
             legacy = True
     include_str = ''
