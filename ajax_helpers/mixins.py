@@ -7,7 +7,7 @@ from django.http import JsonResponse
 
 
 class AjaxHelpers:
-    ajax_commands = ['button', 'tooltip', 'timer']
+    ajax_commands = ['button', 'tooltip', 'timer', 'ajax']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
