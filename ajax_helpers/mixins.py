@@ -4,6 +4,9 @@ import json
 import codecs
 import inspect
 from django.http import JsonResponse
+from django.utils.safestring import mark_safe
+
+from ajax_helpers.utils import ajax_command
 
 
 class AjaxHelpers:
@@ -19,11 +22,8 @@ class AjaxHelpers:
     def add_command(self, function_name, **kwargs):
         if type(function_name) == list:
             self.response_commands += function_name
-        elif type(function_name) == dict:
-            self.response_commands.append(function_name)
         else:
-            kwargs['function'] = function_name
-            self.response_commands.append(kwargs)
+            self.response_commands.append(ajax_command(function_name, **kwargs))
 
     def command_response(self, function_name=None, **kwargs):
         if function_name is not None:
@@ -44,6 +44,19 @@ class AjaxHelpers:
                         return getattr(self, f'{t}_{response[t]}')(**response)
         if hasattr(super(), 'post'):
             return super().post(request, *args, **kwargs)
+
+    def get_ajax_onload(self):
+        pass
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs) if hasattr(super(), 'get_context_data') else {}
+        onload = self.get_ajax_onload()
+        if onload:
+            command = ajax_command('onload', commands=[onload])
+            context['ajax_helpers_script'] = mark_safe(
+                f'<script>ajax_helpers.process_commands([{json.dumps(command)}])</script>'
+            )
+        return context
 
 
 class ReceiveForm:

@@ -264,6 +264,22 @@ if (typeof ajax_helpers === 'undefined') {
             null: function (){
             },
 
+            timeout: function (command){
+                window.setTimeout(function () {
+                    ajax_helpers.process_commands(command.commands)
+                }, command.time)
+            },
+
+            ajax_post: function (command) {
+                ajax_helpers.post_json(command.data)
+            },
+
+            onload: function (command) {
+                $(document).ready(function () {
+                    ajax_helpers.process_commands(command.commands);
+                });
+            },
+
             delay: function (command) {
                 ajax_helpers.ajax_busy = true;
                 window.setTimeout(function () {
