@@ -1,3 +1,7 @@
 /django_examples/db.sqlite3
 *.pyc
 /.idea/
+/media/
+/django_ajax_helpers.egg-info/
+/dist/
+/build/lib/ajax_helpers/
