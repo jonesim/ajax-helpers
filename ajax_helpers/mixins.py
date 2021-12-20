@@ -18,6 +18,7 @@ class AjaxHelpers:
         for c in inspect.getmro(self.__class__):
             self.command_set = self.command_set | set(getattr(c,'ajax_commands', []))
         self.response_commands = []
+        self.page_commands = []
 
     def add_command(self, function_name, **kwargs):
         if type(function_name) == list:
@@ -45,14 +46,16 @@ class AjaxHelpers:
         if hasattr(super(), 'post'):
             return super().post(request, *args, **kwargs)
 
-    def get_ajax_onload(self):
-        pass
+    def add_page_command(self, function_name, **kwargs):
+        if type(function_name) == list:
+            self.page_commands += function_name
+        else:
+            self.page_commands.append(ajax_command(function_name, **kwargs))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs) if hasattr(super(), 'get_context_data') else {}
-        onload = self.get_ajax_onload()
-        if onload:
-            command = ajax_command('onload', commands=[onload])
+        if self.page_commands:
+            command = ajax_command('onload', commands=self.page_commands)
             context['ajax_helpers_script'] = mark_safe(
                 f'<script>ajax_helpers.process_commands([{json.dumps(command)}])</script>'
             )
