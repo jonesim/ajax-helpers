@@ -270,8 +270,16 @@ if (typeof ajax_helpers === 'undefined') {
                 }, command.time)
             },
 
+            timer: function (command) {
+                window.setInterval(function () {
+                    if (command.always || document.visibilityState === "visible") {
+                        ajax_helpers.process_commands([...command.commands]);
+                    }
+                }, command.interval);
+            },
+
             ajax_post: function (command) {
-                ajax_helpers.post_json(command.data)
+                ajax_helpers.post_json({url:command.url, data: command.data})
             },
 
             onload: function (command) {
