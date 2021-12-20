@@ -1,7 +1,18 @@
 <div id="{{ id }}_container"{% if width or height %}
      style="{% if width %}width:{{ width }};{% endif %}{% if height %}height:{{ height }}{% endif %}"
-        {% endif %} class="relative_overflow {{ css_class }}">
-    {{ text|default:"Upload file" }}
+{% endif %} class="relative_overflow {{ css_class }}">
+    <div class="d-inline">
+        <div>
+            {{ text|default:"Upload file" }}
+        </div>
+        {% if progress %}
+        <div class="progress w-100" style="margin-top: 5px; min-width: 200px">
+            <div id="file_progress_bar_0" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0"
+                 aria-valuemax="100" style="width: 0%">
+            </div>
+        </div>
+        {% endif %}
+    </div>
     <form class="file-upload-form"
           id="{{ id }}_form">
         <input style="cursor: pointer" id="{{ id }}" type="file" name="ajax_file">
@@ -9,11 +20,11 @@
 </div>
 <script>
     {% if drag_drop == 'default' %}
-        drag = new ajax_helpers.drag_drop('#{{ id }}_container')
+        drag = new ajax_helpers.drag_drop('#{{ id }}_container');
     {% elif drag_drop %}
-        drag = new ajax_helpers.drag_drop('{{ drag_drop }}')
+        drag = new ajax_helpers.drag_drop('{{ drag_drop }}');
     {% endif %}
     $('#{{ id }}').change(function () {
-        ajax_helpers.upload_file('#{{ id }}')
-    })
+        ajax_helpers.upload_file('#{{ id }}');
+    });
 </script>
