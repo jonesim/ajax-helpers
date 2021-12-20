@@ -1,0 +1,20 @@
+{% extends 'ajax_examples/base.html' %}
+{% load static ajax_helpers src_code %}
+{% block contents %}
+    <div class="p-4">
+
+        <p>Button to upload a file to View</p>
+        {% upload_file %}
+
+        <p>Drop area to upload files </p>
+
+        {% upload_file progress=True drag_drop='default' css_class='upload-dropzone' text='Drop files here or click to select file' width='100%' height='200px' %}
+
+        <div class="mt-5">
+            <h4>Uploaded files</h4>
+            {% for f in files %}
+                <p>{{ f }}</p>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}
