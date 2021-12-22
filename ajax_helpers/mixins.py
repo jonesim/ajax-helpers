@@ -137,5 +137,5 @@ class AjaxFileUploadMixin:
 
     def upload_completed(self):
         self.add_command('delay', time=500)
-        self.add_command('message', text='Download complete')
+        self.add_command('message', text='Upload complete')
         return self.command_response('reload')
