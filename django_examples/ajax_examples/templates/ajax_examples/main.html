@@ -1,5 +1,5 @@
 {% extends 'ajax_examples/base.html' %}
-{% load static ajax_helpers src_code %}
+{% load static ajax_helpers %}
 {% block contents %}
 
     <div class="p-4">
@@ -13,29 +13,26 @@
         <hr>
         <p>Django returns a command to display a message</p>
         {% ajax_button 'AJAX message' 'test_ajax' %}
-
         <hr>
+
         <p>Django returns a command to replace html contents of an element</p>
         {% ajax_button 'AJAX replace html' 'test_html' %}
         <br><br>
         <div id="html_test">Contents to be replaced</div>
-
         <hr>
+
         <p>Message followed by redirect command</p>
         {% ajax_button 'AJAX with redirect from django' 'redirect' %}
-
         <hr>
-        <p>Simple html form sending data to django which returns a message to user</p>
 
+        <p>Simple html form sending data to django which returns a message to user</p>
         <form id="form_id">
             <input name="field1" type="text">
         </form>
         <br>
-
-
         {% send_form_button '<span><i class="fas fa-save"></i></span> Submit' 'form_id' %}
-
         <hr>
+
         <p>Uses Django form class to generate form and validate</p>
         <div>
             <form id="django_form_id">
@@ -44,6 +41,7 @@
             {% send_form_button 'Django Submit' 'django_form_id' %}
         </div>
         <hr>
+
         <h4>Ajax Tooltips</h4>
         <p>Can pass data to django with multiple data attributes in the element</p>
         <p>CSS for tooltip can be specified</p>
@@ -53,21 +51,35 @@
 
         <span data-django="yesterday" id='tooltip_div-2' class="p-2 bg-warning">HTML Tooltip</span>
         {% tooltip_init '#tooltip_div-2' 'demo_tooltip' 'other-class' %}
-
         <hr>
+
         <h4>append_to</h4>
         <p>Insert elements at the end of the target</p>
         {% ajax_button 'Append' 'append' %}
         <div id="append-to"></div>
         <br>
         <hr>
+
         <h4>set_css</h4>
         <p>Set css properties of elements</p>
         {% ajax_button 'CSS' 'css' %}
         <div id="css-test" class="m-4" style="width:100px;height:100px;background-color: #1e7e34">
         </div>
+        <hr>
+
+        <h4>element_count</h4>
+        <p></p>
+        {% ajax_button 'Count divs' 'count' %}
         <br>
         <hr>
+
+        <h4>get_attr</h4>
+        <p></p>
+        <div class="test-class" id="test-attr-div"></div>
+        {% ajax_button 'Get class of div' 'get_attr' %}
+        <br>
+        <hr>
+
         <h4>null</h4>
         <p>Do nothing</p>
         {% ajax_button 'NULL' 'null' %}

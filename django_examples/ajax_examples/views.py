@@ -11,11 +11,11 @@ from django_menus.menu import MenuMixin
 from openpyxl import Workbook
 from show_src_code.view_mixins import DemoViewMixin
 
-from ajax_helpers.mixins import AjaxHelpers, ReceiveForm, AjaxFileHelpers, AjaxFileUploadMixin
+from ajax_helpers.mixins import AjaxHelpers, ReceiveForm, AjaxFileUploadMixin
 from ajax_helpers.utils import ajax_command
 
 
-class MainMenu(DemoViewMixin, MenuMixin):
+class MainMenu(DemoViewMixin, MenuMixin, TemplateView):
 
     def setup_menu(self):
         super().setup_menu()
@@ -24,6 +24,8 @@ class MainMenu(DemoViewMixin, MenuMixin):
             ('timer_examples', 'Timers'),
             ('download_examples', 'File Downloads'),
             ('dragdrop_upload', 'File Uploads'),
+            ('event_example', 'Event'),
+            'help',
         )
 
 
@@ -45,7 +47,7 @@ class ToolTip(TemplateView):
         return context
 
 
-class Example1(MainMenu, AjaxFileHelpers, ReceiveForm, AjaxHelpers, TemplateView):
+class Example1(ReceiveForm, AjaxHelpers, MainMenu):
 
     template_name = 'ajax_examples/main.html'
 
@@ -71,7 +73,7 @@ class Example1(MainMenu, AjaxFileHelpers, ReceiveForm, AjaxHelpers, TemplateView
             return self.command_response('html', selector='#django_form_id', html=a.as_p())
 
     def button_append(self):
-        self.add_command('append_to', html='<div>New div</div>', element='#append-to')
+        self.add_command('append_to', html='<div>New div</div>', selector='#append-to')
         return self.command_response()
 
     def button_css(self):
@@ -81,6 +83,19 @@ class Example1(MainMenu, AjaxFileHelpers, ReceiveForm, AjaxHelpers, TemplateView
     def button_null(self):
         return self.command_response('null')
 
+    def button_count(self):
+        return self.command_response('element_count', selector='div', data={'ajax': 'count_response'})
+
+    def ajax_count_response(self, **kwargs):
+        return self.command_response('message', text='Number of divs ' + str(kwargs['count']))
+
+    def button_get_attr(self):
+        return self.command_response('get_attr', selector='#test-attr-div', attr='class',
+                                     data={'ajax': 'attr_response'})
+
+    def ajax_attr_response(self, **kwargs):
+        return self.command_response('message', text='Div classes ' + str(kwargs['val']))
+
     def file_upload(self, file):
         return self.command_response('message', text=f'Received {file.name} size {file.size}')
 
@@ -88,9 +103,6 @@ class Example1(MainMenu, AjaxFileHelpers, ReceiveForm, AjaxHelpers, TemplateView
         context = super().get_context_data(**kwargs)
         context['form'] = TestForm()
         return context
-
-    def add_to_context(self, **kwargs):
-        return {'title': type(self).__name__, 'filter': filter}
 
 
 class Example2(Example1):
@@ -111,13 +123,13 @@ class TimerExample(Example1):
             'timeout', commands=[ajax_command('message', text='Message appears after 4 seconds')], time=4000
         )
         self.add_page_command(
-            'timer', commands=[ajax_command('ajax_post', url=self.request.path, data={'timer': 'test'})], interval=2000
+            'timer', commands=[ajax_command('ajax_post', data={'timer': 'test'})], interval=2000
         )
 
         return super().get_context_data(**kwargs)
 
 
-class DownloadExamples(Example1):
+class DownloadExamples(AjaxHelpers, MainMenu):
     template_name = 'ajax_examples/file_downloads.html'
 
     @staticmethod
@@ -173,7 +185,7 @@ class DownloadExamples(Example1):
         return super().get(request, *args, **kwargs)
 
 
-class DragDropUpload(AjaxFileUploadMixin, Example1):
+class DragDropUpload(AjaxFileUploadMixin, AjaxHelpers, MainMenu):
 
     template_name = 'ajax_examples/dragdrop_upload.html'
 
@@ -186,4 +198,56 @@ class DragDropUpload(AjaxFileUploadMixin, Example1):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['files'] = os.listdir('/media/')
+        return context
+
+
+class EventExample(ReceiveForm, AjaxHelpers, MainMenu):
+
+    template_name = 'ajax_examples/event.html'
+
+    def form_test_form(self, **kwargs):
+
+        if kwargs.get('from_event') == 'keyup':
+            response = ('<span class="text-danger">Not enough chars<span>' if len(kwargs['text_entry']) < 6
+                        else '<span class="text-success">All good now<span>')
+            return self.command_response('html', selector='#message', html=response)
+
+    def get_context_data(self, **kwargs):
+        self.add_page_command('on', event='keyup', selector='input', commands=[
+            ajax_command('send_form', form_id='test_form', from_event='keyup')
+        ])
+        context = super().get_context_data(**kwargs)
+        context['form'] = TestForm()
+        return context
+
+
+class Help(MainMenu):
+    template_name = 'ajax_examples/help.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context['commands'] = {
+            'ajax_post': 'data, (url)',
+            'append_to': 'selector, html',
+            'delay': 'time',
+            'element_count': 'selector, data, (url)',
+            'get_attr': 'selector, attr, data, (url)',
+            'html': 'selector, (parent), html',
+            'message': 'text',
+            'null': '',
+            'on': 'selector, event, commands',
+            'onload': 'commands',
+            'reload': '',
+            'redirect': 'url',
+            'save_file': 'filename, data',
+            'send_form': 'form_id',
+            'set_attr': 'selector, attr, val',
+            'set_css': 'selector, prop, val',
+            'set_prop': 'selector, prop, val',
+            'set_value': 'selector, val',
+            'timeout': 'commands, time',
+            'timer': 'commands, interval',
+            'upload_file': '',
+        }
         return context

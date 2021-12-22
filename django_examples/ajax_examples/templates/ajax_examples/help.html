@@ -1,0 +1,19 @@
+{% extends 'ajax_examples/base.html' %}
+
+{% block contents %}
+    <div class="p-4">
+        <h4>Commands that can be sent from Django to browser</h4>
+        <table class="table table-sm">
+            <tr>
+                <th>Command</th>
+                <th>Parameters</th>
+            </tr>
+            {% for k,v in commands.items %}
+                <tr>
+                    <td>{{ k }}</td>
+                    <td>{{ v }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+{% endblock %}

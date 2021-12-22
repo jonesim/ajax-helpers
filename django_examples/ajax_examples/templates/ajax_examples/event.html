@@ -1,0 +1,17 @@
+{% extends 'ajax_examples/base.html' %}
+
+{% block contents %}
+    {{ ajax_helpers_script }}
+
+    <div class="p-4">
+    <h4>Events</h4>
+
+        <p>Uses a page command to add an event listener to key up on inputs</p>
+        <p>Response give message whether enough characters have been entered</p>
+
+        <form id="test_form">
+            {{ form }}
+        </form>
+    <span id="message"></span>
+    </div>
+{% endblock %}

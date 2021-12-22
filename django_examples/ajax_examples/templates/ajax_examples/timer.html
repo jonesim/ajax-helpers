@@ -1,6 +1,8 @@
 {% extends 'ajax_examples/base.html' %}
-{% load static ajax_helpers src_code %}
+
 {% block contents %}
+    {{ ajax_helpers_script }}
+
     <div class="p-4">
         <h4>timeout</h4>
         <p>A timeout is started on loading the page of 4 seconds.</p>
