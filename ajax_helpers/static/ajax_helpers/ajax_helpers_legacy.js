@@ -1,6 +1,18 @@
 "use strict";
 
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
+
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter); }
+
+function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 
 if (typeof ajax_helpers === 'undefined') {
   var ajax_helpers = function () {
@@ -296,6 +308,46 @@ if (typeof ajax_helpers === 'undefined') {
 
     var command_functions = {
       null: function _null() {},
+      element_count: function element_count(command) {
+        command.data.count = $(command.selector).length;
+        ajax_helpers.post_json({
+          url: command.url,
+          data: command.data
+        });
+      },
+      get_attr: function get_attr(command) {
+        command.data.val = $(command.selector).attr(command.attr);
+        ajax_helpers.post_json({
+          url: command.url,
+          data: command.data
+        });
+      },
+      timeout: function timeout(command) {
+        window.setTimeout(function () {
+          ajax_helpers.process_commands(command.commands);
+        }, command.time);
+      },
+      timer: function timer(command) {
+        window.setInterval(function () {
+          if (command.always || document.visibilityState === "visible") {
+            ajax_helpers.process_commands(_toConsumableArray(command.commands));
+          }
+        }, command.interval);
+      },
+      ajax_post: function ajax_post(command) {
+        ajax_helpers.post_json({
+          url: command.url,
+          data: command.data
+        });
+      },
+      send_form: function send_form(command) {
+        ajax_helpers.send_form(command.form_id, command);
+      },
+      onload: function onload(command) {
+        $(document).ready(function () {
+          ajax_helpers.process_commands(command.commands);
+        });
+      },
       delay: function delay(command) {
         ajax_helpers.ajax_busy = true;
         window.setTimeout(function () {
@@ -316,6 +368,11 @@ if (typeof ajax_helpers === 'undefined') {
         });
         download_blob(command.filename, blob);
       },
+      on: function on(command) {
+        $(command.selector).on(command.event, function () {
+          ajax_helpers.process_commands(_toConsumableArray(command.commands));
+        });
+      },
       set_prop: function set_prop(command) {
         $(command.selector).prop(command.prop, command.val);
       },
@@ -329,13 +386,7 @@ if (typeof ajax_helpers === 'undefined') {
         $(command.selector).css(command.prop, command.val);
       },
       append_to: function append_to(command) {
-        if (command.check_id !== undefined) {
-          if ($('#' + command.check_id).length) {
-            return;
-          }
-        }
-
-        $(command.html).appendTo(command.element);
+        $(command.html).appendTo(command.selector);
       },
       html: function html(command) {
         var element = $(command.selector);
