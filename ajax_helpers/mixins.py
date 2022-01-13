@@ -46,6 +46,7 @@ class AjaxHelpers:
                         del response[t]
                         return method(**response)
         if hasattr(super(), 'post'):
+            # noinspection PyUnresolvedReferences
             return super().post(request, *args, **kwargs)
 
     def add_page_command(self, function_name, **kwargs):
@@ -55,6 +56,7 @@ class AjaxHelpers:
             self.page_commands.append(ajax_command(function_name, **kwargs))
 
     def get_context_data(self, **kwargs):
+        # noinspection PyUnresolvedReferences
         context = super().get_context_data(**kwargs) if hasattr(super(), 'get_context_data') else {}
         if self.page_commands:
             command = ajax_command('onload', commands=self.page_commands)
@@ -70,11 +72,13 @@ class ReceiveForm:
         if request.is_ajax() and request.content_type == 'multipart/form-data':
             if 'form_id' in request.POST:
                 return getattr(self, f'form_{request.POST["form_id"]}')(**request.POST.dict())
+        # noinspection PyUnresolvedReferences
         return super().post(request, *args, **kwargs)
 
 
 class UTF8EncodedStringIO(io.StringIO):
     def next(self):
+        # noinspection PyUnresolvedReferences
         return super(UTF8EncodedStringIO, self).next().encode('utf-8')
 
 
@@ -89,6 +93,7 @@ class AjaxFileHelpers(AjaxHelpers):
         stream = UTF8EncodedStringIO(s)
         return csv.DictReader(stream, delimiter=',')
 
+    # noinspection PyUnusedLocal
     @staticmethod
     def file_upload(file):
         return JsonResponse({'file': 'ok'})
@@ -109,6 +114,7 @@ class AjaxFileUploadMixin:
             index = 0
         return f'#file_progress_bar_{index}'
 
+    # noinspection PyUnresolvedReferences
     def post(self, request, *args, **kwargs):
         if request.is_ajax() and request.content_type == 'multipart/form-data' and self.upload_key in request.FILES:
             response = request.POST.dict()
@@ -133,9 +139,53 @@ class AjaxFileUploadMixin:
         kwargs['files'] = [f for f in kwargs['files'] if f['size'] > 0]
         if len(kwargs['files']) == 0:
             return self.upload_completed()
+        # noinspection PyUnresolvedReferences
         return self.command_response('upload_file', **self.upload_file_command(0, **kwargs))
 
+    # noinspection PyUnresolvedReferences
     def upload_completed(self):
         self.add_command('delay', time=500)
         self.add_command('message', text='Upload complete')
         return self.command_response('reload')
+
+
+class AjaxTaskMixin:
+    refresh_ms = 600
+    tasks = {}
+
+    def task_progress(self, info):
+        pass
+
+    # noinspection PyUnusedLocal, PyUnresolvedReferences
+    def task_state_success(self, task_result, task_name, **kwargs):
+        return self.command_response('null')
+
+    # noinspection PyUnusedLocal, PyUnresolvedReferences
+    def task_state_failure(self, task_result, task_name, **kwargs):
+        return self.command_response('null')
+
+    # noinspection PyUnusedLocal, PyUnresolvedReferences
+    def task_state_revoked(self, _task_result, task_name, **kwargs):
+        return self.command_response('null')
+
+    def ajax_check_result(self, *, task_id, task_name, **kwargs):
+        task_result = self.tasks[task_name].AsyncResult(task_id)
+        state_method = getattr(self, 'task_state_' + task_result.state.lower(), None)
+        if state_method:
+            return state_method(task_result=task_result, task_name=task_name, **kwargs)
+        if isinstance(task_result.info, dict):
+            self.task_progress(task_result.info)
+        # noinspection PyUnresolvedReferences
+        return self.command_response(
+            'timeout', time=self.refresh_ms, commands=[ajax_command('ajax_post', url=self.request.path, data=dict(
+                ajax='check_result', task_id=task_result.id, task_name=task_name, **kwargs
+            ))]
+        )
+
+    def start_task(self, task_name, task_kwargs=None, result_kwargs=None):
+        if not task_kwargs:
+            task_kwargs = {}
+        if not result_kwargs:
+            result_kwargs = {}
+        task = self.tasks[task_name].delay(**task_kwargs)
+        return self.ajax_check_result(task_id=task.id, task_name=task_name, **result_kwargs)
