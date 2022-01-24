@@ -365,6 +365,10 @@ if (typeof ajax_helpers === 'undefined') {
                 alert(command.text);
             },
 
+            clipboard: function(command){
+                navigator.clipboard.writeText(command.text);
+            },
+
             upload_file: function (command) {
                 var file, file_data;
                 var index = command.index !== undefined ? command.index : 0;

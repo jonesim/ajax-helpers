@@ -56,6 +56,10 @@ class Example1(ReceiveForm, AjaxHelpers, MainMenu):
         self.add_command('redirect', url=reverse('redirect'))
         return self.command_response()
 
+    def button_test_clipboard(self):
+        self.add_command('clipboard', text='Text from Django')
+        return self.command_response('message', text='Text copied to clipboard')
+
     def button_test_ajax(self):
         return self.command_response('message', text='From Django View')
 
