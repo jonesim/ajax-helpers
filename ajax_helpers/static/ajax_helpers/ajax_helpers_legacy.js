@@ -438,7 +438,7 @@ if (typeof ajax_helpers === 'undefined') {
         }
 
         form_data.ajax_modal_file = file_data;
-        ajax_helpers.send_form(null, form_data, null, command.options);
+        ajax_helpers.send_form(null, form_data, 0, command.options);
       }
     };
 
