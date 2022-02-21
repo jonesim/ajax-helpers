@@ -29,6 +29,7 @@ ALLOWED_HOSTS = []
 
 
 # Application definition
+X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -46,6 +47,7 @@ INSTALLED_APPS = [
     'datatable_examples',
     'menu_examples',
     'django_datatables',
+    'crispy_forms'
 ]
 
 MIDDLEWARE = [
