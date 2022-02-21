@@ -1,0 +1,10 @@
+{% load ajax_helpers %}
+{% lib_include 'ScreenCapture' module='ajax_helpers.includes' %}
+<div style="position: absolute;right:0px; top:0px">
+    <span style="color:white;margin-right: 3px" id="record-timer"></span>
+    <span class="record-menu">{{ menu }}</span>
+</div>
+<script>
+    extra_data = {{ extra_data|safe }}
+</script>
+<iframe style="border-width:0px;height:1200px;width:100%" src="{{ request.path }}" id="capture_frame"></iframe>
