@@ -38,6 +38,12 @@ class FontAwesome(SourceBase):
     css_filename = 'all.css'
 
 
+class ScreenCapture(SourceBase):
+    static_path = 'ajax_helpers/'
+    js_filename = 'screen_capture.js'
+    js_path = ''
+
+
 packages = {
     'ajax_helpers': [Jquery, Popper, AjaxHelpers],
 }
