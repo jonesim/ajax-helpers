@@ -2,6 +2,8 @@ from django.urls import path
 import ajax_examples.views as views
 from django.views.generic import RedirectView
 
+from ajax_helpers.screen_capture import ChooseAudioModal
+
 urlpatterns = [
     path('', RedirectView.as_view(pattern_name='ajax_main', )),
     path('ajax-redirect/', RedirectView.as_view(pattern_name='ajax_main', ), name='django-ajax-helpers'),
@@ -13,4 +15,5 @@ urlpatterns = [
     path('dragdrop-upload/', views.DragDropUpload.as_view(), name='dragdrop_upload'),
     path('event/', views.EventExample.as_view(), name='event_example'),
     path('help/', views.Help.as_view(), name='help'),
+    path('choose-audio/<str:base64>/', ChooseAudioModal.as_view(), name='choose_audio_modal'),
 ]

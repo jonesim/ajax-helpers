@@ -21,6 +21,7 @@
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
         {{ menus.main_menu.render }}
     </div>
+    <button class="btn btn-primary hide-frame" onclick="ajax_helpers.post_json({data: {button: 'capture'}})"><i class="fas fa-video"></i></button>
     <div class="text-light">
         {{ menus.user_menu.render }}
     </div>
@@ -34,5 +35,17 @@
 {% block contents %}
 
 {% endblock %}
+<script>
+    function inIframe () {
+        try {
+            return window.self !== window.top;
+        } catch (e) {
+            return true;
+        }
+    }
+    if (inIframe()){
+        $('.hide-frame').hide()
+    }
+</script>
 </body>
 </html>

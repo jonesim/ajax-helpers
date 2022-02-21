@@ -12,10 +12,22 @@ from openpyxl import Workbook
 from show_src_code.view_mixins import DemoViewMixin
 
 from ajax_helpers.mixins import AjaxHelpers, ReceiveForm, AjaxFileUploadMixin
+from ajax_helpers.screen_capture import ScreenCaptureMixin
 from ajax_helpers.utils import ajax_command
 
 
-class MainMenu(DemoViewMixin, MenuMixin, TemplateView):
+class DemoScreenCapture(ScreenCaptureMixin):
+
+    def ajax_upload_video(self, **_kwargs):
+        filename = 'screen_capture.mp4'
+        path = '/media/' + filename
+        with open(path, 'wb+') as destination:
+            destination.write(self.request.FILES['data'].read())
+        self.add_command('message', text='Uploaded')
+        return self.command_response('redirect', url=self.request.path)
+
+
+class MainMenu(DemoScreenCapture, DemoViewMixin, MenuMixin, TemplateView):
 
     def setup_menu(self):
         super().setup_menu()
@@ -225,7 +237,7 @@ class EventExample(ReceiveForm, AjaxHelpers, MainMenu):
         return context
 
 
-class Help(MainMenu):
+class Help(AjaxHelpers, MainMenu):
     template_name = 'ajax_examples/help.html'
 
     def get_context_data(self, **kwargs):
