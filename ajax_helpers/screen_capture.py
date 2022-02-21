@@ -26,10 +26,9 @@ class ScreenCaptureMixin:
 
     def button_capture(self, **kwargs):
         menu = self.capture_menu('record', 'far fa-circle', 'btn-success', 'record', 'mic', 'exit')
-        return self.command_response('html', selector='body',
-                                     html=render_to_string('ajax_helpers/screen_capture.html',
-                                                           {'menu': menu, 'extra_data': json.dumps(kwargs)},
-                                                           self.request))
+        return self.command_response('html', selector='body', html=render_to_string(
+            'ajax_helpers/screen_capture.html', {'menu': menu, 'extra_data': json.dumps(kwargs)}, self.request
+        ))
 
     @staticmethod
     def capture_dropdown(*args):
@@ -51,9 +50,10 @@ class ScreenCaptureMixin:
                          dropdown=(self.capture_dropdown(*dropdown)), placement='bottom-end')).render()
 
     def button_recording_started(self):
-        return self.command_response('html', selector='.record-menu',
-                                     html=self.capture_menu('pause', 'fas fa-pause', 'btn-danger', 'pause',
-                                                            'upload', 'exit'))
+        return self.command_response(
+            'html', selector='.record-menu',
+            html=self.capture_menu('pause', 'fas fa-pause', 'btn-danger', 'pause', 'upload', 'exit')
+        )
 
     def button_record(self):
         return self.command_response('start_capture')
@@ -70,12 +70,7 @@ class ScreenCaptureMixin:
         return self.command_response('upload_capture')
 
     def ajax_upload_video(self, **_kwargs):
-        filename = 'xx.mp4'
-        path = '/media/' + filename
-        with open(path, 'wb+') as destination:
-            destination.write(self.request.FILES['data'].read())
-        self.add_command('message', text='Uploaded')
-        return self.command_response('redirect', url=self.request.path)
+        pass
 
 
 class ChooseAudio(CrispyForm):
