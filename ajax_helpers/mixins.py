@@ -4,11 +4,14 @@ import json
 import codecs
 import inspect
 from django.http import JsonResponse
+from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 from ajax_helpers.utils import ajax_command
 
 
+@method_decorator(ensure_csrf_cookie, name='dispatch')
 class AjaxHelpers:
     ajax_commands = ['button', 'tooltip', 'timer', 'ajax']
 
@@ -64,6 +67,9 @@ class AjaxHelpers:
                 f'<script>ajax_helpers.process_commands([{json.dumps(command)}])</script>'
             )
         return context
+
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
 
 
 class ReceiveForm:
