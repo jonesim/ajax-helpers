@@ -19,14 +19,16 @@ if (typeof screen_capture === 'undefined') {
 
         function audio_devices(modal_url) {
             let audioInputs = [];
-            navigator.mediaDevices.enumerateDevices().then(function (deviceInfos) {
-                for (let i = 0; i !== deviceInfos.length; ++i) {
-                    const deviceInfo = deviceInfos[i];
-                    if (deviceInfo.kind === "audioinput") {
-                        audioInputs.push([deviceInfo.deviceId, deviceInfo.label || "microphone " + (audioInputs.length + 1)]);
+            navigator.mediaDevices.getUserMedia({audio: true}).then(s => {
+                navigator.mediaDevices.enumerateDevices().then(function (deviceInfos) {
+                    for (let i = 0; i !== deviceInfos.length; ++i) {
+                        const deviceInfo = deviceInfos[i];
+                        if (deviceInfo.kind === "audioinput") {
+                            audioInputs.push([deviceInfo.deviceId, deviceInfo.label || "microphone " + (audioInputs.length + 1)]);
+                        }
                     }
-                }
-                django_modal.show_modal(modal_url.replace('%1%', btoa(JSON.stringify(audioInputs).replace(/\+/g, '-').replace(/\//g, '_'))));
+                    django_modal.show_modal(modal_url.replace('%1%', btoa(JSON.stringify(audioInputs).replace(/\+/g, '-').replace(/\//g, '_'))));
+                });
             });
         }
 
