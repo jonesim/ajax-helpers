@@ -1,0 +1,42 @@
+{% extends 'ajax_examples/base.html' %}
+{% load ajax_helpers%}
+{% block head %}
+        {% lib_include 'Toast' module='ajax_helpers.includes' %}
+{% endblock %}
+
+
+{% load static ajax_helpers %}
+{% block contents %}
+
+    <div class="p-4">
+        {% block extra-title %}
+        {% endblock %}
+
+        <h4 id="dragdrop">Ajax Helpers Toast Demo Page</h4>
+        {{ description|safe }}
+
+        Please see <a href="https://github.com/kamranahmedse/jquery-toast-plugin">here</a> for more info on the toast library
+        <br>
+
+        <hr>
+        <p>Simple toast message</p>
+        {% ajax_button 'Toast Message' 'toast_simple' %}
+        <hr>
+        <p>Toast message with heading and icon position bottom right</p>
+        {% ajax_button 'Toast Message' 'toast_with_heading' %}
+
+        <hr>
+        <p>Toast message sticky</p>
+        {% ajax_button 'Toast Message' 'toast_sticky' %}
+        <hr>
+
+        <p>Toast message stacked</p>
+        {% ajax_button 'Toast Message' 'toast_stacked' %}
+        <hr>
+
+            <p>Only one of the same Toast message uses the if_not_selector</p>
+        {% ajax_button 'Toast Message' 'toast_sticky_only_one' %}
+        <hr>
+
+    </div>
+{% endblock %}

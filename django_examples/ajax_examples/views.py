@@ -34,6 +34,7 @@ class MainMenu(DemoScreenCapture, DemoViewMixin, MenuMixin, TemplateView):
         self.add_menu('main_menu').add_items(
             ('ajax_main', 'General'),
             ('timer_examples', 'Timers'),
+            ('toast_examples', 'Toast'),
             ('download_examples', 'File Downloads'),
             ('dragdrop_upload', 'File Uploads'),
             ('event_example', 'Event'),
@@ -143,6 +144,40 @@ class TimerExample(Example1):
         )
 
         return super().get_context_data(**kwargs)
+
+
+class ToastExample(Example1):
+    template_name = 'ajax_examples/toast.html'
+
+    def button_toast_simple(self):
+        return self.command_response('toast', text='toast message', position='bottom-right')
+
+    def button_toast_with_heading(self):
+        return self.command_response('toast', heading='Information',
+                                     text='toast message', position='bottom-right', icon='info')
+
+    def button_toast_stacked(self):
+
+        for x in range(1, 6):
+            self.add_command('toast', heading='Information', text=f'toast message {x}',
+                             position='bottom-right', stack=10)
+
+        return self.command_response()
+
+    def button_toast_sticky(self):
+        return self.command_response('toast', heading='Information',
+                                     text='toast message', position='bottom-right', icon='info',
+                                     hideAfter=False)
+
+    def button_toast_sticky_only_one(self):
+        return self.command_response('if_not_selector', selector='#my_toast_message:visible',
+                                     commands=[ajax_command('toast',
+                                                            id='my_toast_message',
+                                                            heading='Information',
+                                                            text='toast message',
+                                                            position='bottom-right',
+                                                            icon='info',
+                                                            hideAfter=False)])
 
 
 class DownloadExamples(AjaxHelpers, MainMenu):

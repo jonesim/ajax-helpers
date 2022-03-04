@@ -44,6 +44,11 @@ class ScreenCapture(SourceBase):
     js_path = ''
 
 
+class Toast(SourceBase):
+    static_path = 'ajax_helpers/toast/'
+    filename = 'jquery.toast.min'
+
+
 packages = {
     'ajax_helpers': [Jquery, Popper, AjaxHelpers],
 }

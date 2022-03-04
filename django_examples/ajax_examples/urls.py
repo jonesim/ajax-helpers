@@ -11,6 +11,7 @@ urlpatterns = [
     path('redirect', views.Example2.as_view(), name='redirect'),
     path('tooltip/', views.ToolTip.as_view(), name='demo_tooltip'),
     path('timer/', views.TimerExample.as_view(), name='timer_examples'),
+    path('toast/', views.ToastExample.as_view(), name='toast_examples'),
     path('download/', views.DownloadExamples.as_view(), name='download_examples'),
     path('dragdrop-upload/', views.DragDropUpload.as_view(), name='dragdrop_upload'),
     path('event/', views.EventExample.as_view(), name='event_example'),
