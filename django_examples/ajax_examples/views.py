@@ -174,7 +174,7 @@ class ToastExample(Example1):
                                      commands=[ajax_command('toast',
                                                             id='my_toast_message',
                                                             heading='Information',
-                                                            text='toast message',
+                                                            text='Only one of me',
                                                             position='bottom-right',
                                                             icon='info',
                                                             hideAfter=False)])
@@ -286,6 +286,7 @@ class Help(AjaxHelpers, MainMenu):
             'get_attr': 'selector, attr, data, (url)',
             'html': 'selector, (parent), html',
             'message': 'text',
+            'console_log': 'text',
             'null': '',
             'on': 'selector, event, commands',
             'onload': 'commands',
@@ -300,5 +301,7 @@ class Help(AjaxHelpers, MainMenu):
             'timeout': 'commands, time',
             'timer': 'commands, interval',
             'upload_file': '',
+            'if_selector': 'selector, commands',
+            'if_not_selector': 'selector, commands',
         }
         return context
