@@ -46,7 +46,8 @@ class ScreenCapture(SourceBase):
 
 class Toast(SourceBase):
     static_path = 'ajax_helpers/toast/'
-    filename = 'jquery.toast.min'
+    css_filename = 'jquery.toast.min.css'
+    js_filename = ['jquery.toast.min.js', 'ajax_helpers_toast.js']
 
 
 packages = {

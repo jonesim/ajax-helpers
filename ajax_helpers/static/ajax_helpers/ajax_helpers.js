@@ -364,7 +364,9 @@ if (typeof ajax_helpers === 'undefined') {
             message: function (command) {
                 alert(command.text);
             },
-
+            console_log: function (command) {
+                console.log(command.text);
+            },
             clipboard: function(command){
                 navigator.clipboard.writeText(command.text);
             },
@@ -414,9 +416,6 @@ if (typeof ajax_helpers === 'undefined') {
                 }
                 form_data.ajax_modal_file = file_data;
                 ajax_helpers.send_form(null, form_data, 0, command.options)
-            },
-            toast: function (command) {
-                $.toast(command);
             }
         };
 
