@@ -8,7 +8,7 @@ from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
 from django.views.decorators.csrf import ensure_csrf_cookie
 
-from ajax_helpers.utils import ajax_command
+from ajax_helpers.utils import ajax_command, is_ajax
 
 
 @method_decorator(ensure_csrf_cookie, name='dispatch')
@@ -35,7 +35,7 @@ class AjaxHelpers:
         return JsonResponse(self.response_commands, safe=False)
 
     def post(self, request, *args, **kwargs):
-        if request.is_ajax():
+        if is_ajax(request):
             if request.content_type == 'application/json':
                 response = json.loads(request.body)
             elif request.content_type == 'multipart/form-data':
@@ -75,7 +75,7 @@ class AjaxHelpers:
 class ReceiveForm:
 
     def post(self, request, *args, **kwargs):
-        if request.is_ajax() and request.content_type == 'multipart/form-data':
+        if is_ajax(request) and request.content_type == 'multipart/form-data':
             if 'form_id' in request.POST:
                 return getattr(self, f'form_{request.POST["form_id"]}')(**request.POST.dict())
         # noinspection PyUnresolvedReferences
@@ -105,7 +105,7 @@ class AjaxFileHelpers(AjaxHelpers):
         return JsonResponse({'file': 'ok'})
 
     def post(self, request, *args, **kwargs):
-        if request.is_ajax() and request.content_type == 'multipart/form-data' and 'ajax_file' in request.FILES:
+        if is_ajax(request) and request.content_type == 'multipart/form-data' and 'ajax_file' in request.FILES:
             return self.file_upload(request.FILES['ajax_file'])
         return super().post(request, *args, **kwargs)
 
@@ -122,14 +122,14 @@ class AjaxFileUploadMixin:
 
     # noinspection PyUnresolvedReferences
     def post(self, request, *args, **kwargs):
-        if request.is_ajax() and request.content_type == 'multipart/form-data' and self.upload_key in request.FILES:
+        if is_ajax(request) and request.content_type == 'multipart/form-data' and self.upload_key in request.FILES:
             response = request.POST.dict()
             file = self.request.FILES[self.upload_key]
             upload_params = json.loads(response.get('upload_params', '{}'))
             index = int(response.pop('index'))
             file_info = [f for f in json.loads(response['file_info']) if f['size'] > 0]
             getattr(self, 'upload_' + request.POST['upload'])(file_info[index]['name'], file_info[index]['size'], file,
-                                                              **upload_params)
+                                                               **upload_params)
             if len(file_info) > index + 1:
                 response['upload_params'] = upload_params
                 return self.command_response('upload_file', **self.upload_file_command(index + 1, **response))

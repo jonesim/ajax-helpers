@@ -13,3 +13,7 @@ def ajax_command(function_name, **kwargs):
     else:
         kwargs['function'] = function_name
         return kwargs
+
+
+def is_ajax(request):
+    return request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
