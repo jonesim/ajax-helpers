@@ -13,7 +13,7 @@ from show_src_code.view_mixins import DemoViewMixin
 
 from ajax_helpers.mixins import AjaxHelpers, ReceiveForm, AjaxFileUploadMixin
 from ajax_helpers.screen_capture import ScreenCaptureMixin
-from ajax_helpers.utils import ajax_command
+from ajax_helpers.utils import ajax_command, toast_commands
 
 
 class DemoScreenCapture(ScreenCaptureMixin):
@@ -34,6 +34,7 @@ class MainMenu(DemoScreenCapture, DemoViewMixin, MenuMixin, TemplateView):
         self.add_menu('main_menu').add_items(
             ('ajax_main', 'General'),
             ('timer_examples', 'Timers'),
+            ('toast_examples', 'Toast'),
             ('download_examples', 'File Downloads'),
             ('dragdrop_upload', 'File Uploads'),
             ('event_example', 'Event'),
@@ -145,6 +146,50 @@ class TimerExample(Example1):
         return super().get_context_data(**kwargs)
 
 
+class ToastExample(Example1):
+    template_name = 'ajax_examples/toast.html'
+
+    def button_toast_simple(self):
+        return self.command_response(
+            toast_commands(text='Message which can be long', body_classes='toast-danger',
+                           position='top-right', font_awesome='fas fa-exclamation-triangle fa-lg')
+        )
+
+    def button_toast_with_heading(self):
+        return self.command_response(
+            toast_commands(text='Message which can be long<br>Second Line', header='Title',
+                           body_classes='toast-info', header_small=datetime.datetime.now().strftime("%H:%M:%S"),
+                           font_awesome='fas fa-exclamation-triangle fa-lg')
+        )
+
+    def button_toast_stacked(self):
+        for x in range(1, 6):
+            self.add_command(toast_commands(header='Information', text=f'toast message {x}',
+                             position='bottom-right'))
+        return self.command_response()
+
+    def button_toast_sticky(self):
+        return self.command_response(toast_commands(header='Information', text='toast message',
+                                                    position='bottom-right', font_awesome='fas fa-info-circle fa-lg',
+                                                    auto_hide=False))
+
+    def button_toast_sticky_only_one(self):
+        return self.command_response(toast_commands(html_id='my_sticky_message',
+                                                    header='Information',
+                                                    text='Only one of me',
+                                                    position='bottom-right',
+                                                    font_awesome='fas fa-info-circle fa-lg',
+                                                    auto_hide=False))
+
+    def button_toast_sticky_only_one_reshow(self):
+        return self.command_response(toast_commands(html_id='my_sticky_message_reshow',
+                                                    header='Information',
+                                                    text='Only one of me show if hidden',
+                                                    position='bottom-right',
+                                                    font_awesome='fas fa-info-circle fa-lg',
+                                                    auto_hide=False, show_hidden=True))
+
+
 class DownloadExamples(AjaxHelpers, MainMenu):
     template_name = 'ajax_examples/file_downloads.html'
 
@@ -251,11 +296,13 @@ class Help(AjaxHelpers, MainMenu):
             'get_attr': 'selector, attr, data, (url)',
             'html': 'selector, (parent), html',
             'message': 'text',
+            'console_log': 'text',
             'null': '',
             'on': 'selector, event, commands',
             'onload': 'commands',
             'reload': '',
             'redirect': 'url',
+            'remove': 'selector',
             'save_file': 'filename, data',
             'send_form': 'form_id',
             'set_attr': 'selector, attr, val',
@@ -265,5 +312,7 @@ class Help(AjaxHelpers, MainMenu):
             'timeout': 'commands, time',
             'timer': 'commands, interval',
             'upload_file': '',
+            'if_selector': 'selector, commands, else_commands',
+            'if_not_selector': 'selector, commands, else_commands',
         }
         return context
