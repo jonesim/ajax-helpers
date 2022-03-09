@@ -19,7 +19,7 @@ def ajax_command(function_name, **kwargs):
 
 def toast_commands(*, text, header=None, header_small=None, html_id=None, position='bottom-right',
                    template_name='ajax_helpers/toast.html', header_classes='', body_classes='', auto_hide=True,
-                   delay=None, font_awesome=None):
+                   delay=None, font_awesome=None, show_hidden=False):
     container_id = 'toast-{}'.format(position)
     container_html = '<div id="{}" style="position:fixed; {}:10px; {}:10px"></div>'.format(container_id,
                                                                                            *position.split('-'))
@@ -34,12 +34,15 @@ def toast_commands(*, text, header=None, header_small=None, html_id=None, positi
                'auto_hide': auto_hide,
                'delay': delay,
                'font_awesome': font_awesome}
-    return [
+    commands = [
         ajax_command('if_not_selector', selector='#' + container_id, commands=[
             ajax_command('append_to', selector='body', html=container_html)
-        ]),
-        ajax_command('if_not_selector', selector='#' + context['html_id'], commands=[
-            ajax_command('append_to', selector='#' + container_id,
-                         html=render_to_string(template_name=template_name, context=context))
-            ])
-    ]
+        ])]
+    if show_hidden:
+        commands.append(ajax_command('remove', selector='#' + context['html_id'] + ':hidden'))
+    commands.append(
+        ajax_command('if_not_selector', selector='#' + context['html_id'] + (':visible' if show_hidden else ''),
+                     commands=[ajax_command('append_to', selector='#' + container_id,
+                                            html=render_to_string(template_name=template_name, context=context))])
+    )
+    return commands
