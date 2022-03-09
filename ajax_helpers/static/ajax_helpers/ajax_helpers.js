@@ -353,10 +353,12 @@ if (typeof ajax_helpers === 'undefined') {
                 }
                 element.html(command.html)
             },
+
             reload: function () {
                 ajax_helpers.ajax_busy = true;
                 location.reload();
             },
+
             redirect: function (command) {
                 window.location.href = command.url;
             },
@@ -364,30 +366,27 @@ if (typeof ajax_helpers === 'undefined') {
             message: function (command) {
                 alert(command.text);
             },
+
             console_log: function (command) {
                 console.log(command.text);
             },
+
             clipboard: function(command){
                 navigator.clipboard.writeText(command.text);
             },
+
             if_selector: function (command) {
                 if ($(command.selector).length > 0) {
-                    var sub_commands = command.commands;
-                    while (sub_commands.length > 0) {
-                        var sub_command = sub_commands.shift();
-                        command_functions[sub_command.function](sub_command);
-                    }
+                    ajax_helpers.process_commands(command.commands)
                 }
             },
+
             if_not_selector: function (command) {
                 if ($(command.selector).length === 0) {
-                    var sub_commands = command.commands;
-                    while (sub_commands.length > 0) {
-                        var sub_command = sub_commands.shift();
-                        command_functions[sub_command.function](sub_command);
-                    }
+                    ajax_helpers.process_commands(command.commands)
                 }
             },
+
             upload_file: function (command) {
                 var file, file_data;
                 var index = command.index !== undefined ? command.index : 0;
