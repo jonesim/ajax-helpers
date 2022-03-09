@@ -13,7 +13,7 @@ from show_src_code.view_mixins import DemoViewMixin
 
 from ajax_helpers.mixins import AjaxHelpers, ReceiveForm, AjaxFileUploadMixin
 from ajax_helpers.screen_capture import ScreenCaptureMixin
-from ajax_helpers.utils import ajax_command
+from ajax_helpers.utils import ajax_command, toast_commands
 
 
 class DemoScreenCapture(ScreenCaptureMixin):
@@ -150,34 +150,44 @@ class ToastExample(Example1):
     template_name = 'ajax_examples/toast.html'
 
     def button_toast_simple(self):
-        return self.command_response('toast', text='toast message', position='bottom-right')
+        return self.command_response(
+            toast_commands(text='Message which can be long', body_classes='toast-danger',
+                           position='top-right', font_awesome='fas fa-exclamation-triangle fa-lg')
+        )
 
     def button_toast_with_heading(self):
-        return self.command_response('toast', heading='Information',
-                                     text='toast message', position='bottom-right', icon='info')
+        return self.command_response(
+            toast_commands(text='Message which can be long<br>Second Line', header='Title',
+                           body_classes='toast-info', header_small=datetime.datetime.now().strftime("%H:%M:%S"),
+                           font_awesome='fas fa-exclamation-triangle fa-lg')
+        )
 
     def button_toast_stacked(self):
-
         for x in range(1, 6):
-            self.add_command('toast', heading='Information', text=f'toast message {x}',
-                             position='bottom-right', stack=10)
-
+            self.add_command(toast_commands(header='Information', text=f'toast message {x}',
+                             position='bottom-right'))
         return self.command_response()
 
     def button_toast_sticky(self):
-        return self.command_response('toast', heading='Information',
-                                     text='toast message', position='bottom-right', icon='info',
-                                     hideAfter=False)
+        return self.command_response(toast_commands(header='Information', text='toast message',
+                                                    position='bottom-right', font_awesome='fas fa-info-circle fa-lg',
+                                                    auto_hide=False))
 
     def button_toast_sticky_only_one(self):
-        return self.command_response('if_not_selector', selector='#my_toast_message:visible',
-                                     commands=[ajax_command('toast',
-                                                            id='my_toast_message',
-                                                            heading='Information',
-                                                            text='Only one of me',
-                                                            position='bottom-right',
-                                                            icon='info',
-                                                            hideAfter=False)])
+        return self.command_response(toast_commands(html_id='my_sticky_message',
+                                                    header='Information',
+                                                    text='Only one of me',
+                                                    position='bottom-right',
+                                                    font_awesome='fas fa-info-circle fa-lg',
+                                                    auto_hide=False))
+
+    def button_toast_sticky_only_one_reshow(self):
+        return self.command_response(toast_commands(html_id='my_sticky_message_reshow',
+                                                    header='Information',
+                                                    text='Only one of me show if hidden',
+                                                    position='bottom-right',
+                                                    font_awesome='fas fa-info-circle fa-lg',
+                                                    auto_hide=False, show_hidden=True))
 
 
 class DownloadExamples(AjaxHelpers, MainMenu):
