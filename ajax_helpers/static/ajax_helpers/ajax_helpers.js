@@ -346,6 +346,10 @@ if (typeof ajax_helpers === 'undefined') {
                 $(command.html).appendTo(command.selector)
             },
 
+            remove: function (command){
+                $(command.selector).remove()
+            },
+
             html: function (command) {
                 var element = $(command.selector);
                 if (command.parent === true) {
@@ -378,12 +382,16 @@ if (typeof ajax_helpers === 'undefined') {
             if_selector: function (command) {
                 if ($(command.selector).length > 0) {
                     ajax_helpers.process_commands(command.commands)
+                } else if (command.else_commands !== undefined){
+                    ajax_helpers.process_commands(command.else_commands)
                 }
             },
 
             if_not_selector: function (command) {
                 if ($(command.selector).length === 0) {
                     ajax_helpers.process_commands(command.commands)
+                } else if (command.else_commands !== undefined){
+                    ajax_helpers.process_commands(command.else_commands)
                 }
             },
 
