@@ -346,6 +346,10 @@ if (typeof ajax_helpers === 'undefined') {
                 $(command.html).appendTo(command.selector)
             },
 
+            remove: function (command){
+                $(command.selector).remove()
+            },
+
             html: function (command) {
                 var element = $(command.selector);
                 if (command.parent === true) {
@@ -353,10 +357,12 @@ if (typeof ajax_helpers === 'undefined') {
                 }
                 element.html(command.html)
             },
+
             reload: function () {
                 ajax_helpers.ajax_busy = true;
                 location.reload();
             },
+
             redirect: function (command) {
                 window.location.href = command.url;
             },
@@ -365,8 +371,28 @@ if (typeof ajax_helpers === 'undefined') {
                 alert(command.text);
             },
 
+            console_log: function (command) {
+                console.log(command.text);
+            },
+
             clipboard: function(command){
                 navigator.clipboard.writeText(command.text);
+            },
+
+            if_selector: function (command) {
+                if ($(command.selector).length > 0) {
+                    ajax_helpers.process_commands(command.commands)
+                } else if (command.else_commands !== undefined){
+                    ajax_helpers.process_commands(command.else_commands)
+                }
+            },
+
+            if_not_selector: function (command) {
+                if ($(command.selector).length === 0) {
+                    ajax_helpers.process_commands(command.commands)
+                } else if (command.else_commands !== undefined){
+                    ajax_helpers.process_commands(command.else_commands)
+                }
             },
 
             upload_file: function (command) {
