@@ -1,8 +1,12 @@
 <div id="{{ html_id }}" class="toast" {% if delay %} data-delay={{ delay }}{% endif %}{% if not auto_hide %} data-autohide="false"{% endif %}>
     {% if header or header_small %}
         <div class="toast-header">
-            <strong class="mr-auto">{{ header|safe }}</strong>
-            <small>{{ header_small|safe }}</small>
+            {% if header %}
+                <strong class="mr-auto">{{ header|safe }}</strong>
+            {% endif %}
+            {%  if header_small %}
+                <small>{{ header_small|safe }}</small>
+            {% endif %}
             <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
             </button>
@@ -15,12 +19,12 @@
                     <i class="{{ font_awesome }}"></i>
                 </div>
             {% endif %}
-            <div class="flex-grow-1 ml-2">
+            <div class="flex-grow-1 mx-2">
                 {{ text|safe }}
             </div>
             {% if not header and not header_small %}
                 <div class="align-content-end">
-                    <button type="button" class="ml-2 mb-1 close" style="margin-top: -10px" data-dismiss="toast"
+                    <button type="button" class="ml-2 mb-1 close" style="margin-top:-10px" data-dismiss="toast"
                             aria-label="Close">
                         <span class="small" aria-hidden="true">&times;</span>
                     </button>
