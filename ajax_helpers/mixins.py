@@ -58,9 +58,13 @@ class AjaxHelpers:
         else:
             self.page_commands.append(ajax_command(function_name, **kwargs))
 
+    def get_page_commands(self):
+        return []
+
     def get_context_data(self, **kwargs):
         # noinspection PyUnresolvedReferences
         context = super().get_context_data(**kwargs) if hasattr(super(), 'get_context_data') else {}
+        self.page_commands += self.get_page_commands()
         if self.page_commands:
             command = ajax_command('onload', commands=self.page_commands)
             context['ajax_helpers_script'] = mark_safe(
