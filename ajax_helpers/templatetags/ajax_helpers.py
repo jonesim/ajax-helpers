@@ -77,10 +77,9 @@ def upload_file(text='Upload File', bootstrap_style='primary', css_class=None, d
 
 
 @register.simple_tag
-def tooltip_init(element_id, url_name, css_class='ajax-tooltip'):
-    return mark_safe(
-        f'''<script>ajax_helpers.tooltip.init('{element_id}', "{reverse(url_name)}", "{css_class}")</script>'''
-    )
+def tooltip_init(selector, function_name, placement='', template=''):
+    return mark_safe(f"<script>ajax_helpers.tooltip('{selector}', '{function_name}', "
+                     f"'{placement}', '{template}')</script>")
 
 
 @register.inclusion_tag('ajax_helpers/ajax_timer.html')

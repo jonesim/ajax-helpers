@@ -193,55 +193,54 @@ if (typeof ajax_helpers === 'undefined') {
             }
         }
 
-        var tooltip = {
-            init: function (selector, url, css_class = 'ajax-tooltip') {
-                var tooltip_start = false;
-
-                $(selector).hover(function () {
-                    var _this = this;
-                    if (!$(".tooltip:hover").length) {
+        var tooltip = (function (selector, function_name, placement, template) {
+            placement = placement ? placement: "bottom";
+            template = template ? template: '<div class="tooltip" role="tooltip"><div class="arrow"></div><div class="tooltip-inner"></div></div>';
+            var tooltip_start = false;
+            $(selector).hover(function () {
+                tooltip_container = $(this);
+                if (!$(".tooltip:hover").length) {
+                    tooltip_start = false;
+                    tooltip_container.tooltip("dispose");
+                } else {
+                    $('.tooltip').mouseleave(function () {
                         tooltip_start = false;
-                        $(this).tooltip("dispose");
-                    } else {
-                        $('.tooltip').mouseleave(function () {
-                            tooltip_start = false;
-                            $(_this).tooltip("dispose");
+                        tooltip_container.tooltip("dispose");
+                    });
+                }
+            });
+            $(selector).mouseover(function () {
+                if (tooltip_start) {
+                    return;
+                }
+                tooltip_start = true;
+                tooltip_container = $(this);
+                var element_data = this.dataset;
+                element_data['tooltip'] = function_name;
+                ajax_helpers.post_json({
+                    data: element_data,
+                    success: function (data) {
+                        tooltip_container.tooltip({
+                            placement: placement,
+                            delay: 0,
+                            trigger: 'manual',
+                            html: true,
+                            title: data,
+                            template: template,
                         });
+                        if (tooltip_start) {
+                            tooltip_container.tooltip('show');
+                            tooltip_start = false;
+                        } else {
+                            tooltip_container.tooltip('dispose');
+                        }
+                    },
+                    error: function () {
+                        tooltip_start = false;
                     }
                 });
-                $(selector).mouseover(function () {
-                    if (tooltip_start) {
-                        return
-                    }
-                    tooltip_start = true;
-                    var tooltip_container = $(this);
-                    $.ajax({
-                        url: url,
-                        data: this.dataset,
-                        success: function (data) {
-                            tooltip_container.tooltip({
-                                placement: "bottom",
-                                delay: 0,
-                                trigger: 'manual',
-                                html: true,
-                                title: data,
-                                template: '<div class="tooltip" role="tooltip"><div class="arrow"></div><div class="tooltip-inner ' +
-                                    css_class + '"></div></div>'
-                            });
-                            if (tooltip_start) {
-                                tooltip_container.tooltip('show');
-                                tooltip_start = false
-                            } else {
-                                tooltip_container.tooltip('dispose')
-                            }
-                        },
-                        error: function () {
-                            tooltip_start = false
-                        }
-                    })
-                })
-            }
-        };
+            });
+        })
 
         function set_ajax_busy(status, pointer_wait) {
             if (typeof pointer_wait === 'undefined') {
