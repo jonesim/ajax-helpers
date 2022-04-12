@@ -227,6 +227,7 @@ if (typeof ajax_helpers === 'undefined') {
                             html: true,
                             title: data,
                             template: template,
+                            sanitize: false,
                         });
                         if (tooltip_start) {
                             tooltip_container.tooltip('show');
