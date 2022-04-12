@@ -160,6 +160,7 @@ if (typeof ajax_helpers === 'undefined') {
         }
 
         function get_content(url, store = true) {
+            $('[data-toggle="tooltip"], .tooltip').tooltip("hide");
             if (store) {
                 history.pushState(null, "", url);
                 window_location = url
