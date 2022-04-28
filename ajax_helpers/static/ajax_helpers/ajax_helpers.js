@@ -59,7 +59,7 @@ if (typeof ajax_helpers === 'undefined') {
                 a.download = filename;
                 document.body.appendChild(a);
                 a.click();
-                window.URL.revokeObjectURL(download_url);
+                setTimeout(function(){ window.URL.revokeObjectURL(download_url); }, 3000);
             }
         }
 
@@ -75,7 +75,7 @@ if (typeof ajax_helpers === 'undefined') {
                 blob = new Blob([response], {type: "octet/stream"});
             }
             download_blob(filename, blob);
-            alert('your file has downloaded');
+            setTimeout(function(){ alert('your file has downloaded') }, 100);
         }
 
         function post_data(url, data, timeout, options) {
