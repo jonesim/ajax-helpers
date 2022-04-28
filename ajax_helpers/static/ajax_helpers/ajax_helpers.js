@@ -160,7 +160,7 @@ if (typeof ajax_helpers === 'undefined') {
         }
 
         function get_content(url, store = true) {
-            $('[data-toggle="tooltip"], .tooltip').tooltip("hide");
+            try{$('[data-toggle="tooltip"], .tooltip').tooltip("hide")} catch {};
             if (store) {
                 history.pushState(null, "", url);
                 window_location = url
@@ -352,6 +352,7 @@ if (typeof ajax_helpers === 'undefined') {
             },
 
             html: function (command) {
+                try{$('[data-toggle="tooltip"], .tooltip').tooltip("hide")} catch {};
                 var element = $(command.selector);
                 if (command.parent === true) {
                     element = element.parent()
