@@ -3,6 +3,7 @@ if (typeof ajax_helpers === 'undefined') {
         var drag_drop_files = [];
         var window_location = window.location;
         var ajax_busy = false;
+        var set_intervals = {}
 
         function getCookie(name) {
             var cookieValue = null;
@@ -282,11 +283,27 @@ if (typeof ajax_helpers === 'undefined') {
             },
 
             timer: function (command) {
-                window.setInterval(function () {
+                var timer = window.setInterval(function () {
                     if (command.always || document.visibilityState === "visible") {
                         ajax_helpers.process_commands([...command.commands]);
                     }
                 }, command.interval);
+                if (command.store !== undefined){
+                    if (set_intervals[command.store] === undefined){
+                        set_intervals[command.store] = [timer]
+                    } else{
+                        set_intervals[command.store].push(timer)
+                    }
+                }
+            },
+
+            clear_timers: function(command){
+                if (set_intervals[command.store] !== undefined) {
+                    for (var i = 0; i < set_intervals[command.store].length; i++) {
+                        clearTimeout(set_intervals[command.store][i]);
+                    }
+                    set_intervals[command.store] = [];
+                }
             },
 
             ajax_post: function (command) {
