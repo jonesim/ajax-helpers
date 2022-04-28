@@ -36,8 +36,8 @@ def determine_css_class(bootstrap_style, css_class):
 
 
 @register.simple_tag
-def button_javascript(button_name, url_name=None, url_args=None, blob=False, **kwargs):
-    json_data = {'data': dict(button=button_name, **kwargs)}
+def post_json_js(url_name=None, url_args=None, blob=False, **kwargs):
+    json_data = {'data': kwargs}
     if url_name:
         json_data['url'] = reverse(url_name, args=url_args)
     if blob:
@@ -46,9 +46,19 @@ def button_javascript(button_name, url_name=None, url_args=None, blob=False, **k
 
 
 @register.simple_tag
+def button_javascript(button_name, url_name=None, url_args=None, blob=False, **kwargs):
+    return post_json_js(button=button_name, url_name=url_name, url_args=url_args, blob=blob, **kwargs)
+
+
+@register.simple_tag
 def ajax_button(text, name, bootstrap_style='primary', css_class=None, **kwargs):
     return mark_safe(f'''<button class="{determine_css_class(bootstrap_style, css_class) }"''' 
                      f'''onclick='{button_javascript(name, **kwargs) }'>{ text }</button>''')
+
+@register.simple_tag
+def ajax_method_button(text, method, bootstrap_style='primary', css_class=None, **kwargs):
+    return mark_safe(f'''<button class="{determine_css_class(bootstrap_style, css_class) }"''' 
+                     f'''onclick='{post_json_js(ajax_method=method, **kwargs) }'>{ text }</button>''')
 
 
 @register.simple_tag
