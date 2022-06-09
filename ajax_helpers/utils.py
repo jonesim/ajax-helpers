@@ -46,3 +46,7 @@ def toast_commands(*, text, header=None, header_small=None, html_id=None, positi
                                             html=render_to_string(template_name=template_name, context=context))])
     )
     return commands
+
+
+def is_ajax(request):
+    return request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
