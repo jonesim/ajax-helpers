@@ -17,6 +17,7 @@
 
         <p>Django returns a command to replace html contents of an element</p>
         {% ajax_button 'AJAX replace html' 'test_html' %}
+        {% ajax_method_button 'ajax_method button' 'button_test_html' %}
         <br><br>
         <div id="html_test">Contents to be replaced</div>
         <hr>
@@ -49,8 +50,14 @@
         <span data-django="today" id='tooltip_div-1' class="p-2 bg-primary">HTML Tooltip</span>
         {% tooltip_init '#tooltip_div-1' 'demo_tooltip' %}
 
+        <style>
+            .other-class{
+                background-color: darkgrey;
+            }
+        </style>
+
         <span data-django="yesterday" id='tooltip_div-2' class="p-2 bg-warning">HTML Tooltip</span>
-        {% tooltip_init '#tooltip_div-2' 'demo_tooltip' 'other-class' %}
+        {% tooltip_init '#tooltip_div-2' 'demo_tooltip' template='<div class="tooltip" role="tooltip"><div class="arrow"></div><div class="tooltip-inner other-class"></div></div>' %}
         <hr>
 
         <h4>append_to</h4>
