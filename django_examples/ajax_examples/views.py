@@ -46,8 +46,19 @@ class TestForm(forms.Form):
     text_entry = forms.CharField(max_length=100)
 
 
-class ToolTip(TemplateView):
-    template_name = 'ajax_examples/tooltip_template.html'
+import inspect
+
+
+class AjaxReg:
+    reg = set()
+
+    @classmethod
+    def register(cls, *args):
+        def decorator(fn):
+            print(fn.__qualname__)
+            cls.reg.add(fn.__name__)
+            return fn
+        return decorator
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
