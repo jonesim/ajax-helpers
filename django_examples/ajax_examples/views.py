@@ -5,13 +5,14 @@ from io import BytesIO
 
 from django import forms
 from django.http import HttpResponse
+from django.shortcuts import render
 from django.urls import reverse
 from django.views.generic import TemplateView
 from django_menus.menu import MenuMixin
 from openpyxl import Workbook
 from show_src_code.view_mixins import DemoViewMixin
 
-from ajax_helpers.mixins import AjaxHelpers, ReceiveForm, AjaxFileUploadMixin
+from ajax_helpers.mixins import AjaxHelpers, ReceiveForm, AjaxFileUploadMixin, ajax_method
 from ajax_helpers.screen_capture import ScreenCaptureMixin
 from ajax_helpers.utils import ajax_command, toast_commands
 
@@ -60,9 +61,15 @@ class AjaxReg:
             return fn
         return decorator
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        if self.request.GET['django'] == 'today':
+
+
+class Example1(ReceiveForm, AjaxHelpers, MainMenu):
+
+    template_name = 'ajax_examples/main.html'
+
+    def tooltip_demo_tooltip(self, **kwargs):
+        context = {}
+        if kwargs['django'] == 'today':
             context['time'] = datetime.datetime.now().strftime('%m/%d/%Y, %H:%M:%S')
             context['day'] = 'Today'
         else:
@@ -87,6 +94,7 @@ class Example1(ReceiveForm, AjaxHelpers, MainMenu):
     def button_test_ajax(self):
         return self.command_response('message', text='From Django View')
 
+    @ajax_method
     def button_test_html(self):
         return self.command_response('html', selector='#html_test', html='From Django View')
 
