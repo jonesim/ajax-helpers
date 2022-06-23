@@ -75,12 +75,7 @@ class Example1(ReceiveForm, AjaxHelpers, MainMenu):
         else:
             context['time'] = (datetime.datetime.now()-datetime.timedelta(days=1)).strftime('%m/%d/%Y, %H:%M:%S')
             context['day'] = 'Yesterday'
-        return context
-
-
-class Example1(ReceiveForm, AjaxHelpers, MainMenu):
-
-    template_name = 'ajax_examples/main.html'
+        return render(self.request, template_name='ajax_examples/tooltip_template.html', context=context)
 
     def button_redirect(self):
         self.add_command('message', text='Will redirect after this message')
