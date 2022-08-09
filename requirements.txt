@@ -5,7 +5,7 @@ django-filtered-datatables==0.0.18
 openpyxl==3.0.7
 
 django-nested-modals==0.0.20
-modal-examples @ git+git://github.com/jonesim/django-modals#subdirectory=django_examples
-menu-examples @ git+git://github.com/jonesim/django-menus#subdirectory=django_examples
-# ajax-examples @ git+git://github.com/jonesim/ajax-helpers#subdirectory=django_examples
-datatable-examples @ git+git://github.com/jonesim/django-datatables@e0535792137acef57160447e235fc0c45c8500b3#subdirectory=django
+modal-examples @ git+https://github.com/jonesim/django-modals#subdirectory=django_examples
+menu-examples @ git+https://github.com/jonesim/django-menus#subdirectory=django_examples
+# ajax-examples @ git+https://github.com/jonesim/ajax-helpers#subdirectory=django_examples
+datatable-examples @ git+https://github.com/jonesim/django-datatables@e0535792137acef57160447e235fc0c45c8500b3#subdirectory=django
