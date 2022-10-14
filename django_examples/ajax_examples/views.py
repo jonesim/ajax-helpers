@@ -1,6 +1,7 @@
 import base64
 import datetime
 import os
+import random
 from io import BytesIO
 
 from django import forms
@@ -88,6 +89,10 @@ class Example1(ReceiveForm, AjaxHelpers, MainMenu):
 
     def button_test_ajax(self):
         return self.command_response('message', text='From Django View')
+
+    def button_set_value(self):
+        number = random.randrange(0, 100)
+        return self.command_response('set_value', selector='#set_field_example', val=f'{number}')
 
     @ajax_method
     def button_test_html(self):

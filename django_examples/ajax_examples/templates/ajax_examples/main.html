@@ -34,6 +34,13 @@
         {% send_form_button '<span><i class="fas fa-save"></i></span> Submit' 'form_id' %}
         <hr>
 
+        <p>Sets the value of a field by ajax</p>
+            <input name="field1" type="text" id="set_field_example">
+        <br>
+        <br>
+        {% ajax_button 'Set Value' 'set_value' %}
+        <hr>
+
         <p>Uses Django form class to generate form and validate</p>
         <div>
             <form id="django_form_id">
