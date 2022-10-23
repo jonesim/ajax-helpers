@@ -1,19 +1,21 @@
 import base64
 import datetime
 import os
+import random
 from io import BytesIO
 
 from django import forms
 from django.http import HttpResponse
+from django.shortcuts import render
 from django.urls import reverse
 from django.views.generic import TemplateView
 from django_menus.menu import MenuMixin
 from openpyxl import Workbook
 from show_src_code.view_mixins import DemoViewMixin
 
-from ajax_helpers.mixins import AjaxHelpers, ReceiveForm, AjaxFileUploadMixin
+from ajax_helpers.mixins import AjaxHelpers, ReceiveForm, AjaxFileUploadMixin, ajax_method
 from ajax_helpers.screen_capture import ScreenCaptureMixin
-from ajax_helpers.utils import ajax_command
+from ajax_helpers.utils import ajax_command, toast_commands
 
 
 class DemoScreenCapture(ScreenCaptureMixin):
@@ -34,6 +36,7 @@ class MainMenu(DemoScreenCapture, DemoViewMixin, MenuMixin, TemplateView):
         self.add_menu('main_menu').add_items(
             ('ajax_main', 'General'),
             ('timer_examples', 'Timers'),
+            ('toast_examples', 'Toast'),
             ('download_examples', 'File Downloads'),
             ('dragdrop_upload', 'File Uploads'),
             ('event_example', 'Event'),
@@ -45,23 +48,35 @@ class TestForm(forms.Form):
     text_entry = forms.CharField(max_length=100)
 
 
-class ToolTip(TemplateView):
-    template_name = 'ajax_examples/tooltip_template.html'
+import inspect
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        if self.request.GET['django'] == 'today':
-            context['time'] = datetime.datetime.now().strftime('%m/%d/%Y, %H:%M:%S')
-            context['day'] = 'Today'
-        else:
-            context['time'] = (datetime.datetime.now()-datetime.timedelta(days=1)).strftime('%m/%d/%Y, %H:%M:%S')
-            context['day'] = 'Yesterday'
-        return context
+
+class AjaxReg:
+    reg = set()
+
+    @classmethod
+    def register(cls, *args):
+        def decorator(fn):
+            print(fn.__qualname__)
+            cls.reg.add(fn.__name__)
+            return fn
+        return decorator
+
 
 
 class Example1(ReceiveForm, AjaxHelpers, MainMenu):
 
     template_name = 'ajax_examples/main.html'
+
+    def tooltip_demo_tooltip(self, **kwargs):
+        context = {}
+        if kwargs['django'] == 'today':
+            context['time'] = datetime.datetime.now().strftime('%m/%d/%Y, %H:%M:%S')
+            context['day'] = 'Today'
+        else:
+            context['time'] = (datetime.datetime.now()-datetime.timedelta(days=1)).strftime('%m/%d/%Y, %H:%M:%S')
+            context['day'] = 'Yesterday'
+        return render(self.request, template_name='ajax_examples/tooltip_template.html', context=context)
 
     def button_redirect(self):
         self.add_command('message', text='Will redirect after this message')
@@ -75,6 +90,11 @@ class Example1(ReceiveForm, AjaxHelpers, MainMenu):
     def button_test_ajax(self):
         return self.command_response('message', text='From Django View')
 
+    def button_set_value(self):
+        number = random.randrange(0, 100)
+        return self.command_response('set_value', selector='#set_field_example', val=f'{number}')
+
+    @ajax_method
     def button_test_html(self):
         return self.command_response('html', selector='#html_test', html='From Django View')
 
@@ -143,6 +163,50 @@ class TimerExample(Example1):
         )
 
         return super().get_context_data(**kwargs)
+
+
+class ToastExample(Example1):
+    template_name = 'ajax_examples/toast.html'
+
+    def button_toast_simple(self):
+        return self.command_response(
+            toast_commands(text='Message which can be long', body_classes='toast-danger',
+                           position='top-right', font_awesome='fas fa-exclamation-triangle fa-lg')
+        )
+
+    def button_toast_with_heading(self):
+        return self.command_response(
+            toast_commands(text='Message which can be long<br>Second Line', header='Title',
+                           body_classes='toast-info', header_small=datetime.datetime.now().strftime("%H:%M:%S"),
+                           font_awesome='fas fa-exclamation-triangle fa-lg')
+        )
+
+    def button_toast_stacked(self):
+        for x in range(1, 6):
+            self.add_command(toast_commands(header='Information', text=f'toast message {x}',
+                             position='bottom-right'))
+        return self.command_response()
+
+    def button_toast_sticky(self):
+        return self.command_response(toast_commands(header='Information', text='toast message',
+                                                    position='bottom-right', font_awesome='fas fa-info-circle fa-lg',
+                                                    auto_hide=False))
+
+    def button_toast_sticky_only_one(self):
+        return self.command_response(toast_commands(html_id='my_sticky_message',
+                                                    header='Information',
+                                                    text='Only one of me',
+                                                    position='bottom-right',
+                                                    font_awesome='fas fa-info-circle fa-lg',
+                                                    auto_hide=False))
+
+    def button_toast_sticky_only_one_reshow(self):
+        return self.command_response(toast_commands(html_id='my_sticky_message_reshow',
+                                                    header='Information',
+                                                    text='Only one of me show if hidden',
+                                                    position='bottom-right',
+                                                    font_awesome='fas fa-info-circle fa-lg',
+                                                    auto_hide=False, show_hidden=True))
 
 
 class DownloadExamples(AjaxHelpers, MainMenu):
@@ -251,11 +315,13 @@ class Help(AjaxHelpers, MainMenu):
             'get_attr': 'selector, attr, data, (url)',
             'html': 'selector, (parent), html',
             'message': 'text',
+            'console_log': 'text',
             'null': '',
             'on': 'selector, event, commands',
             'onload': 'commands',
             'reload': '',
             'redirect': 'url',
+            'remove': 'selector',
             'save_file': 'filename, data',
             'send_form': 'form_id',
             'set_attr': 'selector, attr, val',
@@ -265,5 +331,7 @@ class Help(AjaxHelpers, MainMenu):
             'timeout': 'commands, time',
             'timer': 'commands, interval',
             'upload_file': '',
+            'if_selector': 'selector, commands, else_commands',
+            'if_not_selector': 'selector, commands, else_commands',
         }
         return context

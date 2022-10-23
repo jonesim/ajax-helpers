@@ -3,6 +3,7 @@ if (typeof ajax_helpers === 'undefined') {
         var drag_drop_files = [];
         var window_location = window.location;
         var ajax_busy = false;
+        var set_intervals = {}
 
         function getCookie(name) {
             var cookieValue = null;
@@ -58,7 +59,7 @@ if (typeof ajax_helpers === 'undefined') {
                 a.download = filename;
                 document.body.appendChild(a);
                 a.click();
-                window.URL.revokeObjectURL(download_url);
+                setTimeout(function(){ window.URL.revokeObjectURL(download_url); }, 3000);
             }
         }
 
@@ -74,7 +75,7 @@ if (typeof ajax_helpers === 'undefined') {
                 blob = new Blob([response], {type: "octet/stream"});
             }
             download_blob(filename, blob);
-            alert('your file has downloaded');
+            setTimeout(function(){ alert('your file has downloaded') }, 100);
         }
 
         function post_data(url, data, timeout, options) {
@@ -160,6 +161,7 @@ if (typeof ajax_helpers === 'undefined') {
         }
 
         function get_content(url, store = true) {
+            try{$('[data-toggle="tooltip"], .tooltip').tooltip("hide")} catch {};
             if (store) {
                 history.pushState(null, "", url);
                 window_location = url
@@ -193,55 +195,55 @@ if (typeof ajax_helpers === 'undefined') {
             }
         }
 
-        var tooltip = {
-            init: function (selector, url, css_class = 'ajax-tooltip') {
-                var tooltip_start = false;
-
-                $(selector).hover(function () {
-                    var _this = this;
-                    if (!$(".tooltip:hover").length) {
+        var tooltip = (function (selector, function_name, placement, template) {
+            placement = placement ? placement: "bottom";
+            template = template ? template: '<div class="tooltip" role="tooltip"><div class="arrow"></div><div class="tooltip-inner"></div></div>';
+            var tooltip_start = false;
+            $(selector).hover(function () {
+                tooltip_container = $(this);
+                if (!$(".tooltip:hover").length) {
+                    tooltip_start = false;
+                    tooltip_container.tooltip("dispose");
+                } else {
+                    $('.tooltip').mouseleave(function () {
                         tooltip_start = false;
-                        $(this).tooltip("dispose");
-                    } else {
-                        $('.tooltip').mouseleave(function () {
-                            tooltip_start = false;
-                            $(_this).tooltip("dispose");
+                        tooltip_container.tooltip("dispose");
+                    });
+                }
+            });
+            $(selector).mouseover(function () {
+                if (tooltip_start) {
+                    return;
+                }
+                tooltip_start = true;
+                tooltip_container = $(this);
+                var element_data = this.dataset;
+                element_data['tooltip'] = function_name;
+                ajax_helpers.post_json({
+                    data: element_data,
+                    success: function (data) {
+                        tooltip_container.tooltip({
+                            placement: placement,
+                            delay: 0,
+                            trigger: 'manual',
+                            html: true,
+                            title: data,
+                            template: template,
+                            sanitize: false,
                         });
+                        if (tooltip_start) {
+                            tooltip_container.tooltip('show');
+                            tooltip_start = false;
+                        } else {
+                            tooltip_container.tooltip('dispose');
+                        }
+                    },
+                    error: function () {
+                        tooltip_start = false;
                     }
                 });
-                $(selector).mouseover(function () {
-                    if (tooltip_start) {
-                        return
-                    }
-                    tooltip_start = true;
-                    var tooltip_container = $(this);
-                    $.ajax({
-                        url: url,
-                        data: this.dataset,
-                        success: function (data) {
-                            tooltip_container.tooltip({
-                                placement: "bottom",
-                                delay: 0,
-                                trigger: 'manual',
-                                html: true,
-                                title: data,
-                                template: '<div class="tooltip" role="tooltip"><div class="arrow"></div><div class="tooltip-inner ' +
-                                    css_class + '"></div></div>'
-                            });
-                            if (tooltip_start) {
-                                tooltip_container.tooltip('show');
-                                tooltip_start = false
-                            } else {
-                                tooltip_container.tooltip('dispose')
-                            }
-                        },
-                        error: function () {
-                            tooltip_start = false
-                        }
-                    })
-                })
-            }
-        };
+            });
+        })
 
         function set_ajax_busy(status, pointer_wait) {
             if (typeof pointer_wait === 'undefined') {
@@ -281,11 +283,27 @@ if (typeof ajax_helpers === 'undefined') {
             },
 
             timer: function (command) {
-                window.setInterval(function () {
+                var timer = window.setInterval(function () {
                     if (command.always || document.visibilityState === "visible") {
                         ajax_helpers.process_commands([...command.commands]);
                     }
                 }, command.interval);
+                if (command.store !== undefined){
+                    if (set_intervals[command.store] === undefined){
+                        set_intervals[command.store] = [timer]
+                    } else{
+                        set_intervals[command.store].push(timer)
+                    }
+                }
+            },
+
+            clear_timers: function(command){
+                if (set_intervals[command.store] !== undefined) {
+                    for (var i = 0; i < set_intervals[command.store].length; i++) {
+                        clearTimeout(set_intervals[command.store][i]);
+                    }
+                    set_intervals[command.store] = [];
+                }
             },
 
             ajax_post: function (command) {
@@ -346,17 +364,24 @@ if (typeof ajax_helpers === 'undefined') {
                 $(command.html).appendTo(command.selector)
             },
 
+            remove: function (command){
+                $(command.selector).remove()
+            },
+
             html: function (command) {
+                try{$('[data-toggle="tooltip"], .tooltip').tooltip("hide")} catch {};
                 var element = $(command.selector);
                 if (command.parent === true) {
                     element = element.parent()
                 }
                 element.html(command.html)
             },
+
             reload: function () {
                 ajax_helpers.ajax_busy = true;
                 location.reload();
             },
+
             redirect: function (command) {
                 window.location.href = command.url;
             },
@@ -365,8 +390,28 @@ if (typeof ajax_helpers === 'undefined') {
                 alert(command.text);
             },
 
+            console_log: function (command) {
+                console.log(command.text);
+            },
+
             clipboard: function(command){
                 navigator.clipboard.writeText(command.text);
+            },
+
+            if_selector: function (command) {
+                if ($(command.selector).length > 0) {
+                    ajax_helpers.process_commands(command.commands)
+                } else if (command.else_commands !== undefined){
+                    ajax_helpers.process_commands(command.else_commands)
+                }
+            },
+
+            if_not_selector: function (command) {
+                if ($(command.selector).length === 0) {
+                    ajax_helpers.process_commands(command.commands)
+                } else if (command.else_commands !== undefined){
+                    ajax_helpers.process_commands(command.else_commands)
+                }
             },
 
             upload_file: function (command) {

@@ -11,6 +11,12 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from ajax_helpers.utils import ajax_command, is_ajax
 
 
+def ajax_method(func):
+    def method(*args, _ajax=True, **kwargs):
+        return func(*args, **kwargs)
+    return method
+
+
 @method_decorator(ensure_csrf_cookie, name='dispatch')
 class AjaxHelpers:
     ajax_commands = ['button', 'tooltip', 'timer', 'ajax']
@@ -43,11 +49,19 @@ class AjaxHelpers:
             else:
                 response = None
             if response:
-                for t in self.command_set:
-                    if t in response and hasattr(self, f'{t}_{response[t]}'):
-                        method = getattr(self, f'{t}_{response[t]}')
-                        del response[t]
+                if 'ajax_method' in response:
+                    method = getattr(self, response.pop('ajax_method'))
+                    if '_ajax' in inspect.signature(method).parameters:
                         return method(**response)
+                    else:
+                        raise Exception(f'Method {method.__qualname__} is not enabled for ajax. '
+                                        f'Use decorator ajax_method.')
+                else:
+                    for t in self.command_set:
+                        if t in response and hasattr(self, f'{t}_{response[t]}'):
+                            method = getattr(self, f'{t}_{response[t]}')
+                            del response[t]
+                            return method(**response)
         if hasattr(super(), 'post'):
             # noinspection PyUnresolvedReferences
             return super().post(request, *args, **kwargs)
@@ -58,9 +72,13 @@ class AjaxHelpers:
         else:
             self.page_commands.append(ajax_command(function_name, **kwargs))
 
+    def get_page_commands(self):
+        return []
+
     def get_context_data(self, **kwargs):
         # noinspection PyUnresolvedReferences
         context = super().get_context_data(**kwargs) if hasattr(super(), 'get_context_data') else {}
+        self.page_commands += self.get_page_commands()
         if self.page_commands:
             command = ajax_command('onload', commands=self.page_commands)
             context['ajax_helpers_script'] = mark_safe(
