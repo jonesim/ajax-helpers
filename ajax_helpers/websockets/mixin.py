@@ -1,7 +1,7 @@
-from django.template.loader import render_to_string
-from django.utils.safestring import mark_safe
 from asgiref.sync import async_to_sync
+
 from ajax_helpers.utils import ajax_command
+
 try:
     from channels.layers import get_channel_layer
 except ImportError:
@@ -43,8 +43,5 @@ class WebsocketHelpers:
         if self.channel_names:
             websocket_helpers_scripts = ''
             for channel_name, ws_url in self.channel_names.items():
-                websocket_helpers_scripts += render_to_string('ajax_helpers/websocket_helpers_script.html',
-                                                              {'channel_name': channel_name,
-                                                               'ws_url': ws_url})
-            context['websocket_helpers_scripts'] = mark_safe(websocket_helpers_scripts)
+                self.add_page_command('start_websocket', channel_name=channel_name, ws_url=ws_url)
         return context

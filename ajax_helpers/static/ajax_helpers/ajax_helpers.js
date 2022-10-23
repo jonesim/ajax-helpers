@@ -517,6 +517,33 @@ if (typeof ajax_helpers === 'undefined') {
             ajax_helpers.ajax_busy = false
         });
 
+        function start_websocket(channel_name, ws_url) {
+            var helperSocket = new WebSocket("ws://" + window.location.host + ws_url);
+
+            helperSocket.onopen = function (e) {
+                console.log("Successfully connected to the WebSocket.");
+            }
+
+            helperSocket.onclose = function (e) {
+                console.log("WebSocket connection closed unexpectedly. Trying to reconnect in 2s...");
+                setTimeout(function () {
+                    console.log("Reconnecting...");
+                    start_websocket(channel_name)();
+                }, 2000);
+            };
+
+            helperSocket.onmessage = function (e) {
+                const commands = JSON.parse(e.data)
+                ajax_helpers.process_commands(commands.commands);
+            }
+
+            helperSocket.onerror = function (err) {
+                console.log("WebSocket encountered an error: " + err.message);
+                console.log("Closing the socket.");
+                helperSocket.close();
+            }
+        }
+
         return {
             getCookie,
             get_content,
@@ -533,6 +560,7 @@ if (typeof ajax_helpers === 'undefined') {
             file_info,
             drag_drop,
             drag_drop_files,
+            start_websocket,
         }
     }()
 }
