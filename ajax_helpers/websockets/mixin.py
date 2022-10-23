@@ -41,7 +41,6 @@ class WebsocketHelpers:
         context = super().get_context_data(**kwargs) if hasattr(super(), 'get_context_data') else {}
 
         if self.channel_names:
-            websocket_helpers_scripts = ''
             for channel_name, ws_url in self.channel_names.items():
                 self.add_page_command('start_websocket', channel_name=channel_name, ws_url=ws_url)
         return context
