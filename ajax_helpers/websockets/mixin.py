@@ -37,4 +37,4 @@ class WebsocketHelpers:
         url = f'{ws_url}/gn-{channel_name}/'
         self.channel_names[channel_name] = url
         if add_command:
-            self.add_page_command('start_websocket', channel_name=channel_name, ws_url=ws_url)
+            self.add_page_command('start_websocket', channel_name=channel_name, ws_url=url)
