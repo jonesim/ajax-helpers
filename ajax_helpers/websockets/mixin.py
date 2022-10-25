@@ -31,16 +31,10 @@ class WebsocketHelpers:
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(channel_name, {"type": "send.commands", 'commands': commands})
 
-    def add_channel(self, channel_name, ws_url=None):
+    def add_channel(self, channel_name, ws_url=None, add_command=True):
         if ws_url is None:
             ws_url = '/helpers'
         url = f'{ws_url}/gn-{channel_name}/'
         self.channel_names[channel_name] = url
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs) if hasattr(super(), 'get_context_data') else {}
-
-        if self.channel_names:
-            for channel_name, ws_url in self.channel_names.items():
-                self.add_page_command('start_websocket', channel_name=channel_name, ws_url=ws_url)
-        return context
+        if add_command:
+            self.add_page_command('start_websocket', channel_name=channel_name, ws_url=ws_url)
