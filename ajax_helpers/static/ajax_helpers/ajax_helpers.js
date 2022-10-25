@@ -461,7 +461,7 @@ if (typeof ajax_helpers === 'undefined') {
 
                 helperSocket.onmessage = function (e) {
                     const commands = JSON.parse(e.data)
-                    ajax_helpers.process_commands(command.commands.commands);
+                    ajax_helpers.process_commands(commands.commands);
                 }
 
                 helperSocket.onerror = function (err) {
