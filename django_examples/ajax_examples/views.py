@@ -63,7 +63,6 @@ class AjaxReg:
         return decorator
 
 
-
 class Example1(ReceiveForm, AjaxHelpers, MainMenu):
 
     template_name = 'ajax_examples/main.html'

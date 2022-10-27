@@ -147,7 +147,7 @@ class AjaxFileUploadMixin:
             index = int(response.pop('index'))
             file_info = [f for f in json.loads(response['file_info']) if f['size'] > 0]
             getattr(self, 'upload_' + request.POST['upload'])(file_info[index]['name'], file_info[index]['size'], file,
-                                                              **upload_params)
+                                                               **upload_params)
             if len(file_info) > index + 1:
                 response['upload_params'] = upload_params
                 return self.command_response('upload_file', **self.upload_file_command(index + 1, **response))
