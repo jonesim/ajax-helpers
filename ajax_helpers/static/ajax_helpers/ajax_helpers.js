@@ -455,7 +455,7 @@ if (typeof ajax_helpers === 'undefined') {
                     console.log("WebSocket connection closed unexpectedly. Trying to reconnect in 2s...");
                     setTimeout(function () {
                         console.log("Reconnecting...");
-                        start_websocket(command.channel_name, command.ws_url)();
+                        command_functions['start_websocket'](command);
                     }, 2000);
                 };
 
