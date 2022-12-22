@@ -394,6 +394,10 @@ if (typeof ajax_helpers === 'undefined') {
                 console.log(command.text);
             },
 
+            focus: function (command) {
+                $(command.selector).focus();
+            },
+
             clipboard: function(command){
                 navigator.clipboard.writeText(command.text);
             },

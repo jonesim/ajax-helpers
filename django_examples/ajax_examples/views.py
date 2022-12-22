@@ -121,6 +121,9 @@ class Example1(ReceiveForm, AjaxHelpers, MainMenu):
     def button_count(self):
         return self.command_response('element_count', selector='div', data={'ajax': 'count_response'})
 
+    def button_focus(self):
+        return self.command_response('focus', selector='#focus_test')
+
     def ajax_count_response(self, **kwargs):
         return self.command_response('message', text='Number of divs ' + str(kwargs['count']))
 
@@ -315,6 +318,7 @@ class Help(AjaxHelpers, MainMenu):
             'html': 'selector, (parent), html',
             'message': 'text',
             'console_log': 'text',
+            'focus': 'selector',
             'null': '',
             'on': 'selector, event, commands',
             'onload': 'commands',
