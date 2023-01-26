@@ -1,6 +1,7 @@
 from asgiref.sync import async_to_sync
 
 from ajax_helpers.utils import ajax_command
+from django.conf import settings
 
 try:
     from channels.layers import get_channel_layer
@@ -32,9 +33,10 @@ class WebsocketHelpers:
         async_to_sync(channel_layer.group_send)(channel_name, {"type": "send.commands", 'commands': commands})
 
     def add_channel(self, channel_name, ws_url=None, add_command=True):
+        websocket_protocol = getattr(settings, 'WEBSOCKET_PROTOCOL', 'ws')
         if ws_url is None:
             ws_url = '/helpers'
         url = f'{ws_url}/gn-{channel_name}/'
         self.channel_names[channel_name] = url
         if add_command:
-            self.add_page_command('start_websocket', channel_name=channel_name, ws_url=url)
+            self.add_page_command('start_websocket', channel_name=channel_name, ws_url=url, protocol=websocket_protocol)
