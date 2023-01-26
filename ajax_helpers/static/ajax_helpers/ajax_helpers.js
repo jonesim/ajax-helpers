@@ -449,7 +449,8 @@ if (typeof ajax_helpers === 'undefined') {
             },
 
             start_websocket: function(command) {
-                var helperSocket = new WebSocket(command.protocol + "://" + window.location.host + command.ws_url);
+                var ws_scheme = window.location.protocol == "https:" ? "wss" : "ws";
+                var helperSocket = new WebSocket(ws_scheme + "://" + window.location.host + command.ws_url);
 
                 helperSocket.onopen = function (e) {
                     console.log("Successfully connected to the WebSocket.");
