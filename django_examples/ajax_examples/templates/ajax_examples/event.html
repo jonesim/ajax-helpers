@@ -1,7 +1,7 @@
 {% extends 'ajax_examples/base.html' %}
 
 {% block contents %}
-    {{ ajax_helpers_script }}
+
 
     <div class="p-4">
     <h4>Events</h4>
@@ -14,4 +14,16 @@
         </form>
     <span id="message"></span>
     </div>
+    <hr/>
+
+        <div class="p-4">
+
+        <p>Uses a page command to add an event listener to key up on inputs with a condition on which character is pressed (press m)</p>
+
+        <input id="test_condition_input" type="text">
+    <span id="message_condition"></span>
+    </div>
+
+
+
 {% endblock %}

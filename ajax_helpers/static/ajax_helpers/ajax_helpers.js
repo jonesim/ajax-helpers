@@ -339,8 +339,21 @@ if (typeof ajax_helpers === 'undefined') {
             },
 
             on: function(command){
-                $(command.selector).on(command.event,function () {
-                    ajax_helpers.process_commands([...command.commands])
+                $(command.selector).on(command.event,function (e) {
+
+                    if(command.keys) {
+                        if (command.keys.includes(e.key)) {
+                           if(command.prevent_default) {
+                                e.preventDefault();
+                            }
+                            ajax_helpers.process_commands([...command.commands])
+                        }
+                    } else {
+                        if(command.prevent_default) {
+                            e.preventDefault();
+                        }
+                        ajax_helpers.process_commands([...command.commands])
+                    }
                 })
             },
 

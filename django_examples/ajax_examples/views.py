@@ -47,7 +47,6 @@ class MainMenu(DemoScreenCapture, DemoViewMixin, MenuMixin, TemplateView):
 class TestForm(forms.Form):
     text_entry = forms.CharField(max_length=100)
 
-
 import inspect
 
 
@@ -295,9 +294,17 @@ class EventExample(ReceiveForm, AjaxHelpers, MainMenu):
             return self.command_response('html', selector='#message', html=response)
 
     def get_context_data(self, **kwargs):
-        self.add_page_command('on', event='keyup', selector='input', commands=[
+        self.add_page_command('on', event='keyup', selector='#id_text_entry', commands=[
             ajax_command('send_form', form_id='test_form', from_event='keyup')
         ])
+
+        self.add_page_command('on',
+                              event='keyup',
+                              selector='#test_condition_input',
+                              keys=['n', 'm'],
+                              prevent_default=True,
+                              commands=[ajax_command('html', selector='#message_condition', html='You pressed m or n')])
+
         context = super().get_context_data(**kwargs)
         context['form'] = TestForm()
         return context
