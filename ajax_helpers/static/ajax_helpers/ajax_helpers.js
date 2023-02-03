@@ -356,6 +356,12 @@ if (typeof ajax_helpers === 'undefined') {
                     }
                 })
             },
+            
+            stop_propagation: function (command) {
+                $(command.selector).on(command.event,function (e) {
+                    e.stopPropagation();
+                })
+            },
 
             set_prop: function (command) {
                 $(command.selector).prop(command.prop, command.val)
