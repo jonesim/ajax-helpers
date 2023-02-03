@@ -416,19 +416,35 @@ if (typeof ajax_helpers === 'undefined') {
             },
 
             if_selector: function (command) {
-                if ($(command.selector).length > 0) {
-                    ajax_helpers.process_commands(command.commands)
-                } else if (command.else_commands !== undefined){
-                    ajax_helpers.process_commands(command.else_commands)
+                if(command.is_visible) {
+                    if ($(command.selector).length > 0 && $(command.selector).is(":visible")) {
+                        ajax_helpers.process_commands(command.commands)
+                    } else if (command.else_commands !== undefined) {
+                        ajax_helpers.process_commands(command.else_commands)
+                    }
+                } else {
+                    if ($(command.selector).length > 0) {
+                        ajax_helpers.process_commands(command.commands)
+                    } else if (command.else_commands !== undefined) {
+                        ajax_helpers.process_commands(command.else_commands)
+                    }
                 }
             },
 
             if_not_selector: function (command) {
-                if ($(command.selector).length === 0) {
-                    ajax_helpers.process_commands(command.commands)
-                } else if (command.else_commands !== undefined){
-                    ajax_helpers.process_commands(command.else_commands)
-                }
+                 if(command.is_visible) {
+                     if ($(command.selector).length === 0 || $(command.selector).is(":hidden")) {
+                         ajax_helpers.process_commands(command.commands)
+                     } else if (command.else_commands !== undefined) {
+                         ajax_helpers.process_commands(command.else_commands)
+                     }
+                 } else {
+                     if ($(command.selector).length === 0) {
+                         ajax_helpers.process_commands(command.commands)
+                     } else if (command.else_commands !== undefined) {
+                         ajax_helpers.process_commands(command.else_commands)
+                     }
+                 }
             },
 
             upload_file: function (command) {

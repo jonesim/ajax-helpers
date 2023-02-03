@@ -207,7 +207,8 @@ class ToastExample(Example1):
                                                     text='Only one of me show if hidden',
                                                     position='bottom-right',
                                                     font_awesome='fas fa-info-circle fa-lg',
-                                                    auto_hide=False, show_hidden=True))
+                                                    auto_hide=False,
+                                                    show_hidden=True))
 
 
 class DownloadExamples(AjaxHelpers, MainMenu):

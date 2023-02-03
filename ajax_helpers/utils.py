@@ -44,7 +44,9 @@ def toast_commands(*, text, header=None, header_small=None, html_id=None, positi
     if show_hidden:
         commands.append(ajax_command('remove', selector='#' + context['html_id'] + ':hidden'))
     commands.append(
-        ajax_command('if_not_selector', selector='#' + context['html_id'] + (':visible' if show_hidden else ''),
+        ajax_command('if_not_selector',
+                     selector='#' + context['html_id'],
+                     is_visible=show_hidden,
                      commands=[ajax_command('append_to', selector='#' + container_id,
                                             html=render_to_string(template_name=template_name, context=context))])
     )
