@@ -110,6 +110,12 @@ class Example1(ReceiveForm, AjaxHelpers, MainMenu):
         self.add_command('append_to', html='<div>New div</div>', selector='#append-to')
         return self.command_response()
 
+    def button_replace_with(self):
+        self.add_command('replace_with',
+                         html='<span id="replace-with" style="color:red;">New Span</div>',
+                         selector='#replace-with')
+        return self.command_response()
+
     def button_css(self):
         self.add_command('set_css', selector='#css-test', prop='width', val='800px')
         return self.command_response('set_css', selector='#css-test', prop='background-color', val='yellow')
@@ -324,6 +330,7 @@ class Help(AjaxHelpers, MainMenu):
             'element_count': 'selector, data, (url)',
             'get_attr': 'selector, attr, data, (url)',
             'html': 'selector, (parent), html',
+            'replace_with': 'selector, (parent), html',
             'message': 'text',
             'console_log': 'text',
             'focus': 'selector',
