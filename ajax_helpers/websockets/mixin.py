@@ -1,7 +1,6 @@
 from asgiref.sync import async_to_sync
 
 from ajax_helpers.utils import ajax_command
-from django.conf import settings
 
 try:
     from channels.layers import get_channel_layer
