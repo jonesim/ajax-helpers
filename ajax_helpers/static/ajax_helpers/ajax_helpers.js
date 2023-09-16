@@ -356,7 +356,7 @@ if (typeof ajax_helpers === 'undefined') {
                     }
                 })
             },
-            
+
             stop_propagation: function (command) {
                 $(command.selector).on(command.event,function (e) {
                     e.stopPropagation();
@@ -407,6 +407,14 @@ if (typeof ajax_helpers === 'undefined') {
 
             message: function (command) {
                 alert(command.text);
+            },
+
+            replace_with: function (command) {
+                var element = $(command.selector);
+                if (command.parent === true) {
+                    element = element.parent()
+                }
+                element.replaceWith(command.html)
             },
 
             console_log: function (command) {
