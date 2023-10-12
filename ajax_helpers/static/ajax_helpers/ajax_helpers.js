@@ -93,6 +93,9 @@ if (typeof ajax_helpers === 'undefined') {
                 success: from_django,
                 timeout: timeout
             };
+            if (options !==undefined && options.sync === true){
+                ajax_config.async = false
+            }
             if (options !== undefined && options.progress !== undefined) {
                 ajax_config.xhr = function () {
                     var xhr = new XMLHttpRequest();
