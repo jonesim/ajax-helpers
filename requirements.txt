@@ -1,10 +1,10 @@
 Django==3.2.7
 django-show-source-code==0.0.7
-django-tab-menus==0.0.15
+django-tab-menus==0.0.17
 django-filtered-datatables==0.0.18
 openpyxl==3.0.7
 
-django-nested-modals==0.0.20
+django-nested-modals==0.0.24
 modal-examples @ git+https://github.com/jonesim/django-modals#subdirectory=django_examples
 menu-examples @ git+https://github.com/jonesim/django-menus#subdirectory=django_examples
 # ajax-examples @ git+https://github.com/jonesim/ajax-helpers#subdirectory=django_examples
