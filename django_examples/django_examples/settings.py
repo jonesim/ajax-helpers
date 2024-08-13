@@ -43,11 +43,11 @@ INSTALLED_APPS = [
     'show_src_code',
     'django_menus',
     'django_modals',
-    'modal_examples',
-    'datatable_examples',
-    'menu_examples',
-    'django_datatables',
-    'crispy_forms'
+    # 'modal_examples',
+    # 'datatable_examples',
+    # 'menu_examples',
+    # 'django_datatables',
+    # 'crispy_forms'
 ]
 
 MIDDLEWARE = [
