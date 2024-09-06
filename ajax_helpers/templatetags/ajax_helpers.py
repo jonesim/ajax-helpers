@@ -18,9 +18,16 @@ def lib_include(context, *args, **kwargs):
             legacy = True
     include_str = ''
     if not args:
-        include_str = html_include(cdn=kwargs.get('cdn'), module=kwargs.get('module'), legacy=legacy)
+        include_str = html_include(cdn=kwargs.get('cdn'),
+                                   module=kwargs.get('module'),
+                                   legacy=legacy,
+                                   version=kwargs.get('version'))
     for a in args:
-        include_str += html_include(a, cdn=kwargs.get('cdn'), module=kwargs.get('module'), legacy=legacy)
+        include_str += html_include(a,
+                                    cdn=kwargs.get('cdn'),
+                                    module=kwargs.get('module'),
+                                    legacy=legacy,
+                                    version=kwargs.get('version'))
     return mark_safe(include_str)
 
 

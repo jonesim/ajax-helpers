@@ -84,7 +84,7 @@ class SourceBase:
         return self.javascript() + self.css()
 
 
-def html_include(library=None, cdn=False, module=None, legacy=False):
+def html_include(library=None, cdn=False, module=None, legacy=False, version=None):
     """
     Returns a string with javascript and css includes defined in a subclass of SourceBase in the calling module or
     defined in passed module as a module or string.
@@ -95,7 +95,8 @@ def html_include(library=None, cdn=False, module=None, legacy=False):
         module = getmodule(stack()[1][0])
     if not library:
         library = 'DefaultInclude'
-    version = getattr(module, 'version', '')
+    if version is None:
+        version = getattr(module, 'version', '')
     packages = getattr(module, 'packages', None)
     if packages and library in packages:
         return mark_safe('\n'.join([lib(version, legacy).includes(cdn) for lib in packages[library]]))
