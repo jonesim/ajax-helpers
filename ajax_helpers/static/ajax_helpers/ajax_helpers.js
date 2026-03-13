@@ -405,7 +405,11 @@ if (typeof ajax_helpers === 'undefined') {
             },
 
             redirect: function (command) {
-                window.location.href = command.url;
+                if (command.new_tab) {
+                    window.open(command.url, '_blank');
+                } else {
+                    window.location.href = command.url;
+                }
             },
 
             message: function (command) {
