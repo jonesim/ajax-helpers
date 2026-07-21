@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=77.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "django-ajax-helpers"
+version = "0.0.22"
+description = "Django app to assist with posting Ajax and receiving commands from django"
+readme = "readme.md"
+requires-python = ">=3.9"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Ian Jones" },
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/jonesim/ajax-helpers"
+
+[tool.setuptools.packages.find]
+include = ["ajax_helpers*"]
+
+[tool.setuptools]
+include-package-data = true
