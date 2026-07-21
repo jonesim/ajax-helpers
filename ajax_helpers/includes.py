@@ -1,3 +1,4 @@
+from .config import get_css_framework
 from .html_include import SourceBase, pip_version
 
 version = pip_version('django-ajax-helpers')
@@ -27,9 +28,17 @@ class Popper(SourceBase):
 
 
 class Bootstrap(SourceBase):
-    static_path = 'ajax_helpers/'
-    cdn_path = 'cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/'
-    filename = 'bootstrap.min'
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if get_css_framework() == 'bootstrap5':
+            self.static_path = None                                     # no local files -> forces CDN
+            self.cdn_path = 'cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/'
+            self.js_filename = 'bootstrap.bundle.min.js'                # Popper bundled in
+            self.css_filename = 'bootstrap.min.css'
+        else:
+            self.static_path = 'ajax_helpers/'                          # unchanged BS4 behaviour
+            self.cdn_path = 'cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/'
+            self.filename = 'bootstrap.min'
 
 
 class FontAwesome(SourceBase):
@@ -44,6 +53,12 @@ class ScreenCapture(SourceBase):
     js_path = ''
 
 
+def default_bundle():
+    if get_css_framework() == 'bootstrap5':
+        return [AjaxHelpers]
+    return [Jquery, Popper, AjaxHelpers]
+
+
 packages = {
-    'ajax_helpers': [Jquery, Popper, AjaxHelpers],
+    'ajax_helpers': default_bundle,   # callable, resolved at render time
 }

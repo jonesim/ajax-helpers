@@ -99,7 +99,10 @@ def html_include(library=None, cdn=False, module=None, legacy=False, version=Non
         version = getattr(module, 'version', '')
     packages = getattr(module, 'packages', None)
     if packages and library in packages:
-        return mark_safe('\n'.join([lib(version, legacy).includes(cdn) for lib in packages[library]]))
+        entry = packages[library]
+        if not isinstance(entry, (list, tuple)):
+            entry = entry()
+        return mark_safe('\n'.join([lib(version, legacy).includes(cdn) for lib in entry]))
     source_class = getattr(module, library, None)
     if isclass(source_class) and issubclass(source_class, SourceBase):
         return mark_safe(source_class(version, legacy).includes(cdn))
