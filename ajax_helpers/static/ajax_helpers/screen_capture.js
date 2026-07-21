@@ -46,7 +46,10 @@ if (typeof screen_capture === 'undefined') {
         function start_timer(){
             timerInterval = window.setInterval(function(){
                 timer += 1;
-                $('#record-timer').html(((timer/60)>>0).toString() + ':' + (timer % 60).toString().padStart(2,'0'))
+                var record_timer = document.getElementById('record-timer');
+                if (record_timer) {
+                    record_timer.innerHTML = ((timer/60)>>0).toString() + ':' + (timer % 60).toString().padStart(2,'0');
+                }
             }, 1000)
         }
 

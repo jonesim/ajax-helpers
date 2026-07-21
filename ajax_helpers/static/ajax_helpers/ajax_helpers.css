@@ -1,74 +1,129 @@
 html.wait, html.wait * { cursor: wait !important; }
 
-.toast-danger{
-    color: #721c24;
-    background-color: #f8d7da;
-    border-color: #f5c6cb;
-}
+/* ----------------------------------------------------------------------------
+   Toast and tooltip styling is fully self-contained (namespaced ah-*) so the
+   features work identically with no Bootstrap, Bootstrap 4, or Bootstrap 5.
+   None of these rules depend on a Bootstrap stylesheet being present.
+---------------------------------------------------------------------------- */
 
-.toast-primary {
-    color: #004085;
-    background-color: #cce5ff;
-    border-color: #b8daff;
-}
-
-.toast-secondary {
-    color: #383d41;
-    background-color: #e2e3e5;
-    border-color: #d6d8db;
-}
-
-.toast-success {
-    color: #155724;
-    background-color: #d4edda;
-    border-color: #c3e6cb;
-}
-
-.toast-warning {
-    color: #856404;
-    background-color: #fff3cd;
-    border-color: #ffeeba;
-}
-
-.toast-info {
-    color: #0c5460;
-    background-color: #d1ecf1;
-    border-color: #bee5eb;
-}
-
-.toast-light {
-    color: #818182;
-    background-color: #fefefe;
-    border-color: #fdfdfe;
-}
-
-.toast-dark {
-    color: #1b1e21;
-    background-color: #d6d8d9;
-    border-color: #c6c8ca;
-}
-
-div.ajax-tooltip {
-    max-width: 600px;
-    background-color: #fff;
-    color: #444;
-    border: 1px solid #aaa;
-}
-
-div.tooltip.show {
-    opacity: 1;
-}
-
-.drag_highlight {
-    background-color: #e5f3ff !important;
-}
-
-.relative_overflow {
-    position: relative;
+/* ---- Toast ---- */
+.ah-toast {
+    display: none;
+    width: 350px;
+    max-width: 100%;
+    margin-bottom: 10px;
+    font-size: 0.875rem;
+    color: #212529;
+    background-color: rgba(255, 255, 255, 0.95);
+    background-clip: padding-box;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1);
+    border-radius: 0.25rem;
     overflow: hidden;
 }
 
-.upload-dropzone{
+.ah-toast.ah-show { display: block; }
+.ah-toast.ah-hide { display: none; }
+
+.ah-toast-header {
+    display: flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    color: #6c757d;
+    background-color: rgba(255, 255, 255, 0.85);
+    background-clip: padding-box;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.ah-toast-title { margin-right: auto; font-weight: bold; }
+.ah-toast-small { margin-left: 0.5rem; color: #6c757d; font-size: 80%; }
+
+.ah-toast-body { padding: 0.75rem; }
+.ah-toast-flex { display: flex; align-items: center; }
+.ah-toast-icon { align-self: center; margin: 0 0.5rem; }
+.ah-toast-content { flex-grow: 1; margin: 0 0.5rem; }
+
+.ah-close {
+    padding: 0;
+    margin-left: 0.5rem;
+    background: transparent;
+    border: 0;
+    font-size: 1.25rem;
+    font-weight: bold;
+    line-height: 1;
+    color: #000;
+    opacity: 0.5;
+    cursor: pointer;
+}
+.ah-close:hover { opacity: 0.85; }
+.ah-close-sm { font-size: 1rem; margin-top: -0.25rem; align-self: flex-start; }
+
+/* Colour variants applied to .ah-toast-body via toast_commands(body_classes=...) */
+.toast-danger    { color: #721c24; background-color: #f8d7da; border-color: #f5c6cb; }
+.toast-primary   { color: #004085; background-color: #cce5ff; border-color: #b8daff; }
+.toast-secondary { color: #383d41; background-color: #e2e3e5; border-color: #d6d8db; }
+.toast-success   { color: #155724; background-color: #d4edda; border-color: #c3e6cb; }
+.toast-warning   { color: #856404; background-color: #fff3cd; border-color: #ffeeba; }
+.toast-info      { color: #0c5460; background-color: #d1ecf1; border-color: #bee5eb; }
+.toast-light     { color: #818182; background-color: #fefefe; border-color: #fdfdfe; }
+.toast-dark      { color: #1b1e21; background-color: #d6d8d9; border-color: #c6c8ca; }
+
+/* ---- Tooltip ---- */
+.ah-tooltip {
+    position: absolute;
+    z-index: 1070;
+    display: block;
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    opacity: 0;
+}
+.ah-tooltip.ah-show { opacity: 0.95; }
+
+.ah-tooltip-inner {
+    max-width: 300px;
+    padding: 0.25rem 0.5rem;
+    color: #fff;
+    text-align: center;
+    background-color: #000;
+    border-radius: 0.25rem;
+}
+
+.ah-arrow {
+    position: absolute;
+    display: block;
+    width: 0.8rem;
+    height: 0.4rem;
+}
+.ah-arrow::before {
+    position: absolute;
+    content: "";
+    border-color: transparent;
+    border-style: solid;
+}
+
+/* placement padding leaves room for the arrow between target and reference */
+.ah-tooltip-top, .ah-tooltip-bottom { padding: 0.4rem 0; }
+.ah-tooltip-left, .ah-tooltip-right { padding: 0 0.4rem; }
+
+.ah-tooltip-top .ah-arrow { bottom: 0; left: 50%; margin-left: -0.4rem; }
+.ah-tooltip-top .ah-arrow::before { top: 0; border-width: 0.4rem 0.4rem 0; border-top-color: #000; }
+
+.ah-tooltip-bottom .ah-arrow { top: 0; left: 50%; margin-left: -0.4rem; }
+.ah-tooltip-bottom .ah-arrow::before { bottom: 0; border-width: 0 0.4rem 0.4rem; border-bottom-color: #000; }
+
+.ah-tooltip-left .ah-arrow { right: 0; top: 50%; margin-top: -0.4rem; width: 0.4rem; height: 0.8rem; }
+.ah-tooltip-left .ah-arrow::before { right: 0; border-width: 0.4rem 0 0.4rem 0.4rem; border-left-color: #000; }
+
+.ah-tooltip-right .ah-arrow { left: 0; top: 50%; margin-top: -0.4rem; width: 0.4rem; height: 0.8rem; }
+.ah-tooltip-right .ah-arrow::before { left: 0; border-width: 0.4rem 0.4rem 0.4rem 0; border-right-color: #000; }
+
+/* ---- Drag / drop + upload widget ---- */
+.drag_highlight { background-color: #e5f3ff !important; }
+
+.relative_overflow { position: relative; overflow: hidden; }
+
+.upload-dropzone {
     background-color: #F0F0F0;
     border: 1px dashed #0f0f0f;
     display: flex;

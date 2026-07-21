@@ -10,7 +10,7 @@ if (typeof ajax_helpers === 'undefined') {
             if (document.cookie && document.cookie !== '') {
                 var cookies = document.cookie.split(';');
                 for (var i = 0; i < cookies.length; i++) {
-                    var cookie = jQuery.trim(cookies[i]);
+                    var cookie = cookies[i].trim();
                     if (cookie.substring(0, name.length + 1) === (name + '=')) {
                         cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                         break;
@@ -20,14 +20,78 @@ if (typeof ajax_helpers === 'undefined') {
             return cookieValue;
         }
 
+        function is_visible(el) {
+            return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
+        }
+
+        // querySelectorAll that understands jQuery's :visible / :hidden pseudo
+        // selectors (used by e.g. toast_commands), which native CSS does not.
+        function query_all(selector) {
+            var visibility = null;
+            var match = selector.match(/:(visible|hidden)\s*$/);
+            if (match) {
+                visibility = match[1];
+                selector = selector.slice(0, match.index);
+            }
+            var nodes = Array.prototype.slice.call(document.querySelectorAll(selector));
+            if (visibility === 'visible') {
+                return nodes.filter(is_visible);
+            }
+            if (visibility === 'hidden') {
+                return nodes.filter(function (el) { return !is_visible(el); });
+            }
+            return nodes;
+        }
+
+        function on_ready(fn) {
+            if (document.readyState !== 'loading') {
+                fn();
+            } else {
+                document.addEventListener('DOMContentLoaded', fn);
+            }
+        }
+
+        // Re-create <script> elements so the browser executes them. innerHTML does
+        // not run scripts, but jQuery's .html()/.append()/.replaceWith() did, and
+        // command responses (toasts, modals, page-load scripts) rely on it.
+        function activate_scripts(node) {
+            var scripts = [];
+            if (node.tagName === 'SCRIPT') {
+                scripts.push(node);
+            }
+            if (node.querySelectorAll) {
+                node.querySelectorAll('script').forEach(function (s) {
+                    scripts.push(s);
+                });
+            }
+            scripts.forEach(function (old) {
+                var s = document.createElement('script');
+                for (var i = 0; i < old.attributes.length; i++) {
+                    s.setAttribute(old.attributes[i].name, old.attributes[i].value);
+                }
+                s.text = old.textContent;
+                old.parentNode.replaceChild(s, old);
+            });
+        }
+
+        function set_html(target, html) {
+            target.innerHTML = html;
+            activate_scripts(target);
+        }
+
+        function ajax_error() {
+            document.documentElement.classList.remove('wait');
+            ajax_helpers.ajax_busy = false;
+        }
+
         function send_form(form_id, extra_data, timeout, options) {
             if (timeout === undefined) {
                 var timeout = 0
             }
             var data;
             if (form_id != null) {
-                var form = $('#' + form_id);
-                data = new FormData(form[0]);
+                var form = document.getElementById(form_id);
+                data = new FormData(form);
             } else {
                 data = new FormData();
             }
@@ -39,8 +103,8 @@ if (typeof ajax_helpers === 'undefined') {
             ajax_helpers.post_data(ajax_helpers.window_location, data, timeout, options);
         }
 
-        function contains_file(jqXHR) {
-            var content_disposition = jqXHR.getResponseHeader('Content-Disposition');
+        function contains_file(xhr) {
+            var content_disposition = xhr.getResponseHeader('Content-Disposition');
             return typeof (content_disposition) == 'string' && content_disposition.indexOf('attachment') > -1;
         }
 
@@ -63,9 +127,9 @@ if (typeof ajax_helpers === 'undefined') {
             }
         }
 
-        function download_file(jqXHR, response) {
+        function download_file(xhr, response) {
             var filename, blob;
-            var content_disposition = jqXHR.getResponseHeader('Content-Disposition');
+            var content_disposition = xhr.getResponseHeader('Content-Disposition');
             var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
             var matches = filenameRegex.exec(content_disposition);
             if (matches != null && matches[1]) filename = matches[1].replace(/['"]/g, '');
@@ -78,38 +142,118 @@ if (typeof ajax_helpers === 'undefined') {
             setTimeout(function(){ alert('your file has downloaded') }, 100);
         }
 
+        // Reads a fetch Response body in the same way jQuery auto-detected it:
+        // attachment -> blob, application/json -> parsed object, otherwise text.
+        function dispatch_fetch(response, success, response_type) {
+            var headers = response.headers;
+            var fake_xhr = {
+                getResponseHeader: function (name) {
+                    return headers.get(name);
+                }
+            };
+            var content_disposition = headers.get('Content-Disposition');
+            var is_file = typeof content_disposition === 'string' && content_disposition.indexOf('attachment') > -1;
+            var content_type = headers.get('Content-Type') || '';
+            var body_promise;
+            if (is_file || response_type === 'blob') {
+                body_promise = response.blob();
+            } else if (response_type === 'arraybuffer') {
+                body_promise = response.arrayBuffer();
+            } else if (content_type.indexOf('application/json') > -1) {
+                body_promise = response.json();
+            } else {
+                body_promise = response.text();
+            }
+            body_promise.then(function (body) {
+                success(body, 'success', fake_xhr);
+            });
+        }
+
+        function fetch_request(config) {
+            var method = config.method || 'get';
+            var headers = {};
+            if (config.contentType) {
+                headers['Content-Type'] = config.contentType;
+            }
+            if (method.toLowerCase() !== 'get') {
+                headers['X-CSRFToken'] = getCookie('csrftoken');
+            }
+            var init = {
+                method: method,
+                headers: headers,
+                credentials: 'same-origin',
+            };
+            if (config.body !== undefined) {
+                init.body = config.body;
+            }
+            var timer;
+            if (config.timeout) {
+                var controller = new AbortController();
+                init.signal = controller.signal;
+                timer = window.setTimeout(function () {
+                    controller.abort();
+                }, config.timeout);
+            }
+            fetch(config.url, init).then(function (response) {
+                if (timer) clearTimeout(timer);
+                if (!response.ok) {
+                    ajax_error();
+                    return;
+                }
+                dispatch_fetch(response, config.success || from_django, config.response_type);
+            }).catch(function () {
+                if (timer) clearTimeout(timer);
+                ajax_error();
+            });
+        }
+
+        // Uploads use XMLHttpRequest because fetch cannot report upload progress
+        // and cannot run synchronously, both of which post_data supports.
         function post_data(url, data, timeout, options) {
             if (timeout === undefined) {
                 var timeout = 0
             }
-            var ajax_config = {
-                url: url,
-                method: 'post',
-                data: data,
-                beforeSend: add_CSRF,
-                cache: false,
-                contentType: false,
-                processData: false,
-                success: from_django,
-                timeout: timeout
-            };
-            if (options !==undefined && options.sync === true){
-                ajax_config.async = false
+            var is_sync = options !== undefined && options.sync === true;
+            var xhr = new XMLHttpRequest();
+            xhr.open('post', url, !is_sync);
+            add_CSRF(xhr);
+            if (timeout) {
+                xhr.timeout = timeout;
             }
             if (options !== undefined && options.progress !== undefined) {
-                ajax_config.xhr = function () {
-                    var xhr = new XMLHttpRequest();
-                    xhr.upload.addEventListener('progress', function (e) {
-                        if (e.lengthComputable) {
-                            var percent = Math.round((e.loaded / e.total) * 100);
-                            $(options.progress.selector).css('width', percent + '%');
-                            $(options.progress.selector).text(percent + '%')
-                        }
-                    });
-                    return xhr;
-                }
+                xhr.upload.addEventListener('progress', function (e) {
+                    if (e.lengthComputable) {
+                        var percent = Math.round((e.loaded / e.total) * 100);
+                        query_all(options.progress.selector).forEach(function (el) {
+                            el.style.width = percent + '%';
+                            el.textContent = percent + '%';
+                        });
+                    }
+                });
             }
-            $.ajax(ajax_config)
+            xhr.onload = function () {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    dispatch_xhr(xhr, from_django);
+                } else {
+                    ajax_error();
+                }
+            };
+            xhr.onerror = ajax_error;
+            xhr.ontimeout = ajax_error;
+            xhr.send(data);
+        }
+
+        function dispatch_xhr(xhr, success) {
+            var content_type = xhr.getResponseHeader('Content-Type') || '';
+            var body;
+            if (contains_file(xhr)) {
+                body = xhr.response;
+            } else if (content_type.indexOf('application/json') > -1) {
+                body = JSON.parse(xhr.responseText);
+            } else {
+                body = xhr.responseText;
+            }
+            success(body, 'success', xhr);
         }
 
         function post_json(ajax_data, timeout) {
@@ -141,42 +285,40 @@ if (typeof ajax_helpers === 'undefined') {
                 url = ajax_helpers.window_location;
             }
 
-            $.ajax(
-                {
-                    url: url,
-                    method: 'post',
-                    data: JSON.stringify(data),
-                    contentType: 'application/json',
-                    beforeSend: add_CSRF,
-                    cache: false,
-                    success: success,
-                    timeout: timeout,
-                    xhrFields: {responseType: response_type},
-                });
+            fetch_request({
+                url: url,
+                method: 'post',
+                body: JSON.stringify(data),
+                contentType: 'application/json',
+                success: success,
+                response_type: response_type,
+                timeout: timeout,
+            });
         }
 
-        function from_django(form_response, status, jqXHR) {
-            if (contains_file(jqXHR)) {
-                download_file(jqXHR, form_response)
+        function from_django(form_response, status, xhr) {
+            if (contains_file(xhr)) {
+                download_file(xhr, form_response)
             } else if (typeof (form_response) == 'object') {
                 process_commands(form_response)
             }
         }
 
         function get_content(url, store = true) {
-            try{$('[data-toggle="tooltip"], .tooltip').tooltip("hide")} catch {};
+            remove_tooltip();
             if (store) {
                 history.pushState(null, "", url);
                 window_location = url
             }
-            $.ajax({
+            fetch_request({
                 url: url,
-                success: from_django
-            })
+                method: 'get',
+                success: from_django,
+            });
         }
 
-        $(window).on("popstate", function (e) {
-            get_content(e.target.window.location.href, false)
+        window.addEventListener('popstate', function (e) {
+            get_content(window.location.href, false)
         });
 
         function process_commands(commands) {
@@ -198,55 +340,105 @@ if (typeof ajax_helpers === 'undefined') {
             }
         }
 
-        var tooltip = (function (selector, function_name, placement, template) {
-            placement = placement ? placement: "bottom";
-            template = template ? template: '<div class="tooltip" role="tooltip"><div class="arrow"></div><div class="tooltip-inner"></div></div>';
-            var tooltip_start = false;
-            $(selector).hover(function () {
-                tooltip_container = $(this);
-                if (!$(".tooltip:hover").length) {
-                    tooltip_start = false;
-                    tooltip_container.tooltip("dispose");
-                } else {
-                    $('.tooltip').mouseleave(function () {
-                        tooltip_start = false;
-                        tooltip_container.tooltip("dispose");
-                    });
-                }
-            });
-            $(selector).mouseover(function () {
-                if (tooltip_start) {
-                    return;
-                }
-                tooltip_start = true;
-                tooltip_container = $(this);
-                var element_data = this.dataset;
-                element_data['tooltip'] = function_name;
-                ajax_helpers.post_json({
-                    data: element_data,
-                    success: function (data) {
-                        tooltip_container.tooltip({
-                            placement: placement,
-                            delay: 0,
-                            trigger: 'manual',
-                            html: true,
-                            title: data,
-                            template: template,
-                            sanitize: false,
-                        });
-                        if (tooltip_start) {
-                            tooltip_container.tooltip('show');
-                            tooltip_start = false;
-                        } else {
-                            tooltip_container.tooltip('dispose');
+        var active_tooltip = null;
+        var tooltip_hide_timer = null;
+
+        function remove_tooltip() {
+            if (tooltip_hide_timer) {
+                clearTimeout(tooltip_hide_timer);
+                tooltip_hide_timer = null;
+            }
+            if (active_tooltip) {
+                active_tooltip.remove();
+                active_tooltip = null;
+            }
+        }
+
+        function position_tooltip(tip, target, placement) {
+            var rect = target.getBoundingClientRect();
+            var sx = window.pageXOffset, sy = window.pageYOffset;
+            var tw = tip.offsetWidth, th = tip.offsetHeight;
+            var top, left;
+            if (placement === 'top') {
+                top = rect.top + sy - th;
+                left = rect.left + sx + rect.width / 2 - tw / 2;
+            } else if (placement === 'left') {
+                top = rect.top + sy + rect.height / 2 - th / 2;
+                left = rect.left + sx - tw;
+            } else if (placement === 'right') {
+                top = rect.top + sy + rect.height / 2 - th / 2;
+                left = rect.right + sx;
+            } else {
+                top = rect.bottom + sy;
+                left = rect.left + sx + rect.width / 2 - tw / 2;
+            }
+            tip.style.top = Math.round(top) + 'px';
+            tip.style.left = Math.round(left) + 'px';
+        }
+
+        function tooltip(selector, function_name, placement, template) {
+            placement = placement ? placement : "bottom";
+            template = template ? template : '<div class="ah-tooltip" role="tooltip"><div class="ah-arrow"></div><div class="ah-tooltip-inner"></div></div>';
+            document.querySelectorAll(selector).forEach(function (el) {
+                el.addEventListener('mouseenter', function () {
+                    var element_data = Object.assign({}, el.dataset);
+                    element_data['tooltip'] = function_name;
+                    ajax_helpers.post_json({
+                        data: element_data,
+                        success: function (data) {
+                            remove_tooltip();
+                            var wrapper = document.createElement('div');
+                            wrapper.innerHTML = template.trim();
+                            var tip = wrapper.firstChild;
+                            tip.classList.add('ah-tooltip-' + placement, 'ah-show');
+                            tip.style.position = 'absolute';
+                            tip.style.top = '0';
+                            tip.style.left = '0';
+                            tip.querySelector('.ah-tooltip-inner').innerHTML = data;
+                            document.body.appendChild(tip);
+                            position_tooltip(tip, el, placement);
+                            active_tooltip = tip;
+                            tip.addEventListener('mouseenter', function () {
+                                if (tooltip_hide_timer) {
+                                    clearTimeout(tooltip_hide_timer);
+                                    tooltip_hide_timer = null;
+                                }
+                            });
+                            tip.addEventListener('mouseleave', remove_tooltip);
                         }
-                    },
-                    error: function () {
-                        tooltip_start = false;
-                    }
+                    });
+                });
+                el.addEventListener('mouseleave', function () {
+                    tooltip_hide_timer = window.setTimeout(remove_tooltip, 100);
                 });
             });
-        })
+        }
+
+        function show_toast(id) {
+            var el = document.getElementById(id);
+            if (!el) {
+                return;
+            }
+            var delay = parseInt(el.getAttribute('data-delay'), 10) || 500;
+            var auto_hide = el.getAttribute('data-autohide') !== 'false';
+            el.querySelectorAll('[data-dismiss="toast"]').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    hide_toast(el);
+                });
+            });
+            el.classList.remove('ah-hide');
+            el.classList.add('ah-show');
+            if (auto_hide) {
+                window.setTimeout(function () {
+                    hide_toast(el);
+                }, delay);
+            }
+        }
+
+        function hide_toast(el) {
+            el.classList.remove('ah-show');
+            el.classList.add('ah-hide');
+        }
 
         function set_ajax_busy(status, pointer_wait) {
             if (typeof pointer_wait === 'undefined') {
@@ -255,12 +447,12 @@ if (typeof ajax_helpers === 'undefined') {
             if (status === true) {
                 ajax_helpers.ajax_busy = true;
                 if (pointer_wait) {
-                    $("html").addClass("wait")
+                    document.documentElement.classList.add('wait')
                 }
             } else {
                 ajax_helpers.ajax_busy = false;
                 if (pointer_wait) {
-                    $("html").removeClass("wait")
+                    document.documentElement.classList.remove('wait')
                 }
             }
         }
@@ -270,12 +462,13 @@ if (typeof ajax_helpers === 'undefined') {
             },
 
             element_count: function(command){
-                command.data.count = $(command.selector).length;
+                command.data.count = query_all(command.selector).length;
                 ajax_helpers.post_json({url:command.url, data: command.data});
             },
 
             get_attr: function(command){
-                command.data.val = $(command.selector).attr(command.attr);
+                var el = query_all(command.selector)[0];
+                command.data.val = el ? el.getAttribute(command.attr) : undefined;
                 ajax_helpers.post_json({url:command.url, data: command.data});
             },
 
@@ -318,7 +511,7 @@ if (typeof ajax_helpers === 'undefined') {
             },
 
             onload: function (command) {
-                $(document).ready(function () {
+                on_ready(function () {
                     ajax_helpers.process_commands(command.commands);
                 });
             },
@@ -342,61 +535,89 @@ if (typeof ajax_helpers === 'undefined') {
             },
 
             on: function(command){
-                $(command.selector).on(command.event,function (e) {
-
-                    if(command.keys) {
-                        if (command.keys.includes(e.key)) {
-                           if(command.prevent_default) {
-                                e.preventDefault();
+                query_all(command.selector).forEach(function (el) {
+                    command.event.split(' ').forEach(function (event_name) {
+                        el.addEventListener(event_name, function (e) {
+                            if (command.keys) {
+                                if (command.keys.includes(e.key)) {
+                                    if (command.prevent_default) {
+                                        e.preventDefault();
+                                    }
+                                    ajax_helpers.process_commands([...command.commands])
+                                }
+                            } else {
+                                if (command.prevent_default) {
+                                    e.preventDefault();
+                                }
+                                ajax_helpers.process_commands([...command.commands])
                             }
-                            ajax_helpers.process_commands([...command.commands])
-                        }
-                    } else {
-                        if(command.prevent_default) {
-                            e.preventDefault();
-                        }
-                        ajax_helpers.process_commands([...command.commands])
-                    }
-                })
+                        });
+                    });
+                });
             },
 
             stop_propagation: function (command) {
-                $(command.selector).on(command.event,function (e) {
-                    e.stopPropagation();
-                })
+                query_all(command.selector).forEach(function (el) {
+                    command.event.split(' ').forEach(function (event_name) {
+                        el.addEventListener(event_name, function (e) {
+                            e.stopPropagation();
+                        });
+                    });
+                });
             },
 
             set_prop: function (command) {
-                $(command.selector).prop(command.prop, command.val)
+                query_all(command.selector).forEach(function (el) {
+                    el[command.prop] = command.val;
+                });
             },
 
             set_attr: function (command) {
-                $(command.selector).attr(command.attr, command.val)
+                query_all(command.selector).forEach(function (el) {
+                    el.setAttribute(command.attr, command.val);
+                });
             },
 
             set_value: function (command) {
-                $(command.selector).val(command.val)
+                query_all(command.selector).forEach(function (el) {
+                    el.value = command.val;
+                });
             },
 
             set_css: function (command) {
-                $(command.selector).css(command.prop, command.val)
+                query_all(command.selector).forEach(function (el) {
+                    el.style.setProperty(command.prop, command.val);
+                });
             },
 
             append_to: function(command) {
-                $(command.html).appendTo(command.selector)
+                query_all(command.selector).forEach(function (target) {
+                    var tmp = document.createElement('div');
+                    tmp.innerHTML = command.html;
+                    var added = [];
+                    while (tmp.firstChild) {
+                        added.push(target.appendChild(tmp.firstChild));
+                    }
+                    added.forEach(function (node) {
+                        if (node.nodeType === 1) {
+                            activate_scripts(node);
+                        }
+                    });
+                });
             },
 
             remove: function (command){
-                $(command.selector).remove()
+                query_all(command.selector).forEach(function (el) {
+                    el.remove();
+                });
             },
 
             html: function (command) {
-                try{$('[data-toggle="tooltip"], .tooltip').tooltip("hide")} catch {};
-                var element = $(command.selector);
-                if (command.parent === true) {
-                    element = element.parent()
-                }
-                element.html(command.html)
+                remove_tooltip();
+                query_all(command.selector).forEach(function (el) {
+                    var target = command.parent === true ? el.parentElement : el;
+                    set_html(target, command.html);
+                });
             },
 
             reload: function () {
@@ -417,11 +638,21 @@ if (typeof ajax_helpers === 'undefined') {
             },
 
             replace_with: function (command) {
-                var element = $(command.selector);
-                if (command.parent === true) {
-                    element = element.parent()
-                }
-                element.replaceWith(command.html)
+                query_all(command.selector).forEach(function (el) {
+                    var target = command.parent === true ? el.parentElement : el;
+                    var tmp = document.createElement('div');
+                    tmp.innerHTML = command.html;
+                    var nodes = Array.prototype.slice.call(tmp.childNodes);
+                    nodes.forEach(function (node) {
+                        target.parentNode.insertBefore(node, target);
+                    });
+                    target.remove();
+                    nodes.forEach(function (node) {
+                        if (node.nodeType === 1) {
+                            activate_scripts(node);
+                        }
+                    });
+                });
             },
 
             console_log: function (command) {
@@ -429,7 +660,10 @@ if (typeof ajax_helpers === 'undefined') {
             },
 
             focus: function (command) {
-                $(command.selector).focus();
+                var el = query_all(command.selector)[0];
+                if (el) {
+                    el.focus();
+                }
             },
 
             clipboard: function(command){
@@ -437,35 +671,43 @@ if (typeof ajax_helpers === 'undefined') {
             },
 
             if_selector: function (command) {
-                if(command.is_visible) {
-                    if ($(command.selector).length > 0 && $(command.selector).is(":visible")) {
-                        ajax_helpers.process_commands([...command.commands])
-                    } else if (command.else_commands !== undefined) {
-                        ajax_helpers.process_commands([...command.else_commands])
-                    }
+                var elements = query_all(command.selector);
+                var matched;
+                if (command.is_visible) {
+                    matched = false;
+                    elements.forEach(function (el) {
+                        if (is_visible(el)) {
+                            matched = true;
+                        }
+                    });
                 } else {
-                    if ($(command.selector).length > 0) {
-                        ajax_helpers.process_commands([...command.commands])
-                    } else if (command.else_commands !== undefined) {
-                        ajax_helpers.process_commands([...command.else_commands])
-                    }
+                    matched = elements.length > 0;
+                }
+                if (matched) {
+                    ajax_helpers.process_commands([...command.commands])
+                } else if (command.else_commands !== undefined) {
+                    ajax_helpers.process_commands([...command.else_commands])
                 }
             },
 
             if_not_selector: function (command) {
-                 if(command.is_visible) {
-                     if ($(command.selector).length === 0 || $(command.selector).is(":hidden")) {
-                         ajax_helpers.process_commands([...command.commands])
-                     } else if (command.else_commands !== undefined) {
-                         ajax_helpers.process_commands([...command.else_commands])
-                     }
-                 } else {
-                     if ($(command.selector).length === 0) {
-                         ajax_helpers.process_commands([...command.commands])
-                     } else if (command.else_commands !== undefined) {
-                         ajax_helpers.process_commands([...command.else_commands])
-                     }
-                 }
+                var elements = query_all(command.selector);
+                var matched;
+                if (command.is_visible) {
+                    matched = elements.length === 0;
+                    elements.forEach(function (el) {
+                        if (!is_visible(el)) {
+                            matched = true;
+                        }
+                    });
+                } else {
+                    matched = elements.length === 0;
+                }
+                if (matched) {
+                    ajax_helpers.process_commands([...command.commands])
+                } else if (command.else_commands !== undefined) {
+                    ajax_helpers.process_commands([...command.else_commands])
+                }
             },
 
             upload_file: function (command) {
@@ -483,7 +725,7 @@ if (typeof ajax_helpers === 'undefined') {
                     form_data.file_info = JSON.stringify(ajax_helpers.file_info(ajax_helpers.drag_drop_files[command.drag_drop]));
                     form_data.drag_drop = command.drag_drop;
                 } else {
-                    file = $(command.selector)[0].files[index];
+                    file = query_all(command.selector)[0].files[index];
                     form_data.file_info = JSON.stringify(ajax_helpers.file_info(command.selector));
                     form_data.selector = command.selector;
                 }
@@ -530,7 +772,7 @@ if (typeof ajax_helpers === 'undefined') {
         function file_info(selector) {
             var files;
             if (typeof (selector) === "string") {
-                files = $(selector)[0].files
+                files = query_all(selector)[0].files
             } else {
                 files = selector
             }
@@ -553,21 +795,28 @@ if (typeof ajax_helpers === 'undefined') {
         }
 
         var drag_drop = function (container_id, upload_params, upload_function) {
-            var dropArea = $(container_id);
+            var dropArea = query_all(container_id)[0];
+            if (!dropArea) {
+                return;
+            }
             if (upload_function === undefined) {
                 upload_function = handle_files;
             }
-            dropArea.on('dragenter dragover', function (e) {
-                e.preventDefault();
-                $(this).addClass('drag_highlight');
+            ['dragenter', 'dragover'].forEach(function (event_name) {
+                dropArea.addEventListener(event_name, function (e) {
+                    e.preventDefault();
+                    dropArea.classList.add('drag_highlight');
+                });
             });
-            dropArea.on('dragleave drop', function (e) {
-                e.preventDefault();
-                $(this).removeClass('drag_highlight');
+            ['dragleave', 'drop'].forEach(function (event_name) {
+                dropArea.addEventListener(event_name, function (e) {
+                    e.preventDefault();
+                    dropArea.classList.remove('drag_highlight');
+                });
             });
-            dropArea.on('drop', function (e) {
-                var dt = e.originalEvent.dataTransfer;
-                upload_function(dt.files, this);
+            dropArea.addEventListener('drop', function (e) {
+                var dt = e.dataTransfer;
+                upload_function(dt.files, dropArea);
             });
 
             function handle_files(files, element) {
@@ -577,11 +826,11 @@ if (typeof ajax_helpers === 'undefined') {
                     files: file_info(files),
                     drag_drop: ajax_helpers.drag_drop_files.length - 1
                 };
-                var element_id = $(element).attr('id');
+                var element_id = element.getAttribute('id');
                 if (upload_params !== undefined && upload_params !== null) {
                     data.upload_params = upload_params
                 }
-                if (element_id !== undefined) {
+                if (element_id !== undefined && element_id !== null) {
                     if (data.upload_params === undefined) {
                         data.upload_params = {element_id: element_id}
                     } else {
@@ -594,11 +843,6 @@ if (typeof ajax_helpers === 'undefined') {
             }
         };
 
-        $(document).ajaxError(function () {
-            $("html").removeClass("wait");
-            ajax_helpers.ajax_busy = false
-        });
-
         return {
             getCookie,
             get_content,
@@ -609,6 +853,8 @@ if (typeof ajax_helpers === 'undefined') {
             command_functions,
             process_commands,
             tooltip,
+            remove_tooltip,
+            show_toast,
             ajax_busy,
             set_ajax_busy,
             upload_file,
