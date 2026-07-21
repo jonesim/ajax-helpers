@@ -24,7 +24,7 @@
     {% elif drag_drop %}
         drag = new ajax_helpers.drag_drop('{{ drag_drop }}');
     {% endif %}
-    $('#{{ id }}').change(function () {
+    document.getElementById('{{ id }}').addEventListener('change', function () {
         ajax_helpers.upload_file('#{{ id }}');
     });
 </script>
