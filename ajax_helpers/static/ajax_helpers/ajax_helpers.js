@@ -499,14 +499,36 @@ if (typeof ajax_helpers === 'undefined') {
             },
 
             start_websocket: function(command) {
+                var sockets = ajax_helpers._websockets || (ajax_helpers._websockets = {});
+                var url = command.ws_url;
+
+                // One socket per page per ws_url. If we already hold one that's
+                // connecting or open, reuse it — repeat calls (page re-render, an
+                // ajax html-swap re-running the tail block, a per-row refresh) must
+                // NOT stack additional connections. Previously every call opened a
+                // fresh WebSocket and every close/error spun up its own immortal
+                // reconnect loop, so sockets accumulated without bound.
+                var existing = sockets[url];
+                if (existing && (existing.readyState === WebSocket.CONNECTING || existing.readyState === WebSocket.OPEN)) {
+                    return existing;
+                }
+
                 var ws_scheme = window.location.protocol == "https:" ? "wss" : "ws";
-                var helperSocket = new WebSocket(ws_scheme + "://" + window.location.host + command.ws_url);
+                var helperSocket = new WebSocket(ws_scheme + "://" + window.location.host + url);
+                sockets[url] = helperSocket;
 
                 helperSocket.onopen = function (e) {
                     console.log("Successfully connected to the WebSocket.");
                 }
 
                 helperSocket.onclose = function (e) {
+                    // Only the currently-registered socket owns the reconnect loop,
+                    // so a superseded/duplicate socket closing can never spawn a
+                    // second loop.
+                    if (sockets[url] !== helperSocket) {
+                        return;
+                    }
+                    delete sockets[url];
                     console.log("WebSocket connection closed unexpectedly. Trying to reconnect in 2s...");
                     setTimeout(function () {
                         console.log("Reconnecting...");
@@ -524,6 +546,7 @@ if (typeof ajax_helpers === 'undefined') {
                     console.log("Closing the socket.");
                     helperSocket.close();
                 }
+                return helperSocket;
             }
         };
 
