@@ -8,7 +8,7 @@ from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
 from django.views.decorators.csrf import ensure_csrf_cookie
 
-from ajax_helpers.utils import ajax_command, is_ajax
+from ajax_helpers.utils import ajax_command, is_ajax, json_body
 
 
 def ajax_method(func):
@@ -43,7 +43,7 @@ class AjaxHelpers:
     def post(self, request, *args, **kwargs):
         if is_ajax(request):
             if request.content_type == 'application/json':
-                response = json.loads(request.body)
+                response = json_body(request)
             elif request.content_type == 'multipart/form-data':
                 response = request.POST.dict()
             else:

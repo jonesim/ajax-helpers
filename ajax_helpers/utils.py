@@ -1,6 +1,8 @@
+import json
 import string
 import random
 
+from django.http import UnreadablePostError
 from django.template.loader import render_to_string
 
 
@@ -55,3 +57,18 @@ def toast_commands(*, text, header=None, header_small=None, html_id=None, positi
 
 def is_ajax(request):
     return request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
+
+
+def json_body(request):
+    """
+    Decoded body of a json ajax post, or None if it did not arrive intact.
+
+    A client that abandons an xhr after the headers have gone out - select2 cancelling the previous
+    search on the next keystroke, an ajax timeout, the page being navigated away from - leaves an
+    empty or truncated body behind a Content-Type: application/json header. There is nobody left to
+    reply to, so treat it as nothing sent rather than raising.
+    """
+    try:
+        return json.loads(request.body)
+    except (json.JSONDecodeError, UnicodeDecodeError, UnreadablePostError):
+        return None
