@@ -12,10 +12,11 @@ except ImportError:
 class ConsumerHelperMixin:
     """The parts both helpers share: command building and slug parsing.
 
-    Everything here is pure and does no I/O, which is exactly why it can be shared -- the
-    lifecycle methods (connect, disconnect, receive, send_commands) and the connect_commands /
-    pre_connect hooks cannot be, because one class needs them sync and the other needs them
-    awaitable. Those stay on the two classes; this holds the logic that was otherwise copied,
+    Nothing here does I/O or has a sync/async split, which is exactly why it can be shared --
+    the lifecycle methods (connect, disconnect, receive, send_commands) and the connect_commands
+    / pre_connect hooks cannot be, because one class needs them sync and the other needs them
+    awaitable. (These do mutate self; "shareable" here means free of the sync/async divide, not
+    side-effect free.) Those stay on the two classes; this holds the logic that was otherwise copied,
     split_slug above all: nine lines of parsing that must agree between the two forever, and
     would not have, the first time one of them was fixed alone.
 
@@ -32,6 +33,12 @@ class ConsumerHelperMixin:
         self.response_commands = []
 
     def add_command(self, function_name, **kwargs):
+        # 0.0.26 note: this was `type(function_name) == list` on ConsumerHelper before the two
+        # classes were merged onto this mixin. The two differ only for a list SUBCLASS, which
+        # the old form passed to ajax_command() as if it were a function name, producing
+        # {'function': [...]} -- a command the client cannot dispatch. Fixing it was the only
+        # way to give both classes one implementation, and the async class already read this
+        # way. Recorded here because it is the sole behaviour change to the sync class.
         if isinstance(function_name, list):
             self.response_commands += function_name
         else:
