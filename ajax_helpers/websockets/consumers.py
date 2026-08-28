@@ -9,18 +9,30 @@ except ImportError:
     pass
 
 
-class ConsumerHelper(WebsocketConsumer):
+class ConsumerHelperMixin:
+    """The parts both helpers share: command building and slug parsing.
+
+    Everything here is pure and does no I/O, which is exactly why it can be shared -- the
+    lifecycle methods (connect, disconnect, receive, send_commands) and the connect_commands /
+    pre_connect hooks cannot be, because one class needs them sync and the other needs them
+    awaitable. Those stay on the two classes; this holds the logic that was otherwise copied,
+    split_slug above all: nine lines of parsing that must agree between the two forever, and
+    would not have, the first time one of them was fixed alone.
+
+    Not an __init__: the two differ in how they call super() and unifying that would change
+    ConsumerHelper. They share _init_helper_state() instead.
+    """
+
     ajax_commands = ['button', 'tooltip', 'timer', 'ajax']
 
-    def __init__(self, *args, **kwargs):
+    def _init_helper_state(self):
         self.slug = {}
-        super().__init__(args, kwargs)
         self.group_name = None
         self.command_set = set()
         self.response_commands = []
 
     def add_command(self, function_name, **kwargs):
-        if type(function_name) == list:
+        if isinstance(function_name, list):
             self.response_commands += function_name
         else:
             self.response_commands.append(ajax_command(function_name, **kwargs))
@@ -31,14 +43,25 @@ class ConsumerHelper(WebsocketConsumer):
         return json.dumps({'commands': self.response_commands}, cls=DjangoJSONEncoder)
 
     def split_slug(self, slug):
+        """Parse ``gn-<group>-<key>-<value>...`` into self.slug, and set self.group_name."""
         if slug is not None and slug != '-':
-            s = slug.split('-')
-            if len(s) == 1:
-                self.slug['gn'] = s[0]
+            parts = slug.split('-')
+            if len(parts) == 1:
+                self.slug['gn'] = parts[0]
             else:
-                self.slug.update({s[k]: s[k+1] for k in range(0, int(len(s)-1), 2)})
+                self.slug.update({parts[k]: parts[k + 1] for k in range(0, len(parts) - 1, 2)})
             if 'gn' in self.slug:
                 self.group_name = self.slug['gn']
+
+
+class ConsumerHelper(ConsumerHelperMixin, WebsocketConsumer):
+
+    def __init__(self, *args, **kwargs):
+        self._init_helper_state()
+        # Left exactly as it has always been. The base takes *args and ignores them, so
+        # handing it the tuple and dict positionally is harmless, and correcting it would
+        # change behaviour in a class this PR otherwise only inherits differently.
+        super().__init__(args, kwargs)
 
     def connect_commands(self):
         pass
@@ -71,7 +94,7 @@ class ConsumerHelper(WebsocketConsumer):
         self.send(text_data=json.dumps(event))
 
 
-class AsyncConsumerHelper(AsyncWebsocketConsumer):
+class AsyncConsumerHelper(ConsumerHelperMixin, AsyncWebsocketConsumer):
     """Async equivalent of ConsumerHelper, with an identical wire protocol.
 
     Same {"commands": [...]} payload and the same 'send.commands' group event, so
@@ -128,36 +151,9 @@ class AsyncConsumerHelper(AsyncWebsocketConsumer):
     plain def it takes the handshake down with it.
     """
 
-    ajax_commands = ['button', 'tooltip', 'timer', 'ajax']
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.slug = {}
-        self.group_name = None
-        self.command_set = set()
-        self.response_commands = []
-
-    def add_command(self, function_name, **kwargs):
-        if isinstance(function_name, list):
-            self.response_commands += function_name
-        else:
-            self.response_commands.append(ajax_command(function_name, **kwargs))
-
-    def command_response(self, function_name=None, **kwargs):
-        if function_name is not None:
-            self.add_command(function_name, **kwargs)
-        return json.dumps({'commands': self.response_commands}, cls=DjangoJSONEncoder)
-
-    def split_slug(self, slug):
-        # Kept equivalent to ConsumerHelper.split_slug so existing slugs parse identically.
-        if slug is not None and slug != '-':
-            s = slug.split('-')
-            if len(s) == 1:
-                self.slug['gn'] = s[0]
-            else:
-                self.slug.update({s[k]: s[k + 1] for k in range(0, int(len(s) - 1), 2)})
-            if 'gn' in self.slug:
-                self.group_name = self.slug['gn']
+        self._init_helper_state()
 
     async def connect_commands(self):
         pass
