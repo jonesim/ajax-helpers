@@ -111,14 +111,21 @@ class AsyncConsumerHelper(AsyncWebsocketConsumer):
 
     Subclassing
     -----------
-    connect_commands and pre_connect are coroutines here. A subclass that overrides them with
-    a plain def will be silently not awaited, so convert overrides when switching. Anything
-    touching the ORM in them needs database_sync_to_async. And note that blocking code in an
-    async consumer blocks the event loop -- every socket and, under Daphne, every HTTP request
-    -- rather than one thread.
+    connect_commands and pre_connect are coroutines here, and both are awaited. A subclass that
+    overrides one with a plain def does NOT fail quietly: the body runs synchronously on the
+    event loop and then `await None` raises TypeError inside connect(). For pre_connect that is
+    before accept(), so the handshake never completes and the client's reconnect loop retries
+    every couple of seconds indefinitely; for connect_commands it is after accept(), so the
+    socket opens and immediately dies without its first frame. Convert overrides when switching.
+
+    Anything touching the ORM in them needs database_sync_to_async. And note that blocking code
+    in an async consumer blocks the event loop -- every socket and, under Daphne, every HTTP
+    request -- rather than one thread.
 
     Unlike ConsumerHelper, this actually calls pre_connect(); the sync class defines the hook
-    but never invokes it.
+    but never invokes it. The two combine badly for anyone migrating a subclass: a pre_connect
+    that has never once run under the sync class starts running here, and if it was left as a
+    plain def it takes the handshake down with it.
     """
 
     ajax_commands = ['button', 'tooltip', 'timer', 'ajax']
