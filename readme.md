@@ -894,6 +894,13 @@ Initialise lazy-loaded tooltips that fetch content from the server on hover.
 ajax_helpers.tooltip('.info-icon', 'details', 'bottom')
 ```
 
+The popup is drawn from `template`, which defaults to the client's own markup:
+`<div class="ah-tooltip"><div class="ah-arrow"></div><div class="ah-tooltip-inner"></div></div>`.
+The fetched html goes into `.ah-tooltip-inner`. A template written for the 0.0.x client, in
+Bootstrap's classes (`.tooltip > .arrow + .tooltip-inner`), still works: the content goes into
+`.tooltip-inner` and the root is given `show` and `bs-tooltip-<placement>` so Bootstrap's own
+stylesheet draws it. With neither inner element the html fills the root.
+
 ### `ajax_helpers.set_ajax_busy(status, pointer_wait)`
 
 Control the busy flag and optional wait cursor.

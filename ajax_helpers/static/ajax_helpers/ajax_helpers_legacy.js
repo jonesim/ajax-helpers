@@ -211,7 +211,11 @@ if (typeof ajax_helpers === 'undefined') {
     }
 
     $(window).on("popstate", function (e) {
-      get_content(e.target.window.location.href, false);
+      // The browser has already put the previous url in the address bar, so this must not push
+      // it again - but window_location has to follow it, or a later post_json with no url of
+      // its own is sent to the page we navigated away from.
+      window_location = e.target.window.location.href;
+      get_content(window_location, false);
     });
 
     function process_commands(commands) {
