@@ -275,6 +275,24 @@ if (typeof ajax_helpers === 'undefined') {
             success(body, 'success', xhr);
         }
 
+        // As jQuery's .val(): a list selects each matching option, or checks a matching checkbox/radio
+        function set_element_value(el, val) {
+            if (Array.isArray(val)) {
+                var values = val.map(String);
+                if (el.tagName === 'SELECT') {
+                    Array.prototype.forEach.call(el.options, function (option) {
+                        option.selected = values.indexOf(option.value) !== -1;
+                    });
+                    return;
+                }
+                if (el.type === 'checkbox' || el.type === 'radio') {
+                    el.checked = values.indexOf(el.value) !== -1;
+                    return;
+                }
+            }
+            el.value = val === null || val === undefined ? '' : val;
+        }
+
         function post_json(ajax_data, timeout) {
             if (timeout === undefined) {
                 var timeout = 0
@@ -599,7 +617,7 @@ if (typeof ajax_helpers === 'undefined') {
 
             set_value: function (command) {
                 query_all(command.selector).forEach(function (el) {
-                    el.value = command.val;
+                    set_element_value(el, command.val);
                 });
             },
 
