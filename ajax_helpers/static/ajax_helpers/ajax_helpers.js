@@ -232,7 +232,8 @@ if (typeof ajax_helpers === 'undefined') {
             if (same_origin(url)) {
                 xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
             }
-            if (timeout) {
+            // Browsers throw on a timeout for a synchronous request
+            if (timeout && !is_sync) {
                 xhr.timeout = timeout;
             }
             if (options !== undefined && options.progress !== undefined) {
