@@ -1,6 +1,10 @@
+from pathlib import Path
+
 from django.core.exceptions import ImproperlyConfigured
 from django.template import Context, Template
-from django.test import SimpleTestCase, override_settings
+from django.test import RequestFactory, SimpleTestCase, override_settings
+
+from .utils import is_ajax
 
 INCLUDE = ("{% load ajax_helpers %}"
            "{% lib_include 'ajax_helpers' 'Bootstrap' module='ajax_helpers.includes' %}")
@@ -40,3 +44,25 @@ class CssFrameworkIncludeTests(SimpleTestCase):
     def test_unsupported_framework_raises(self):
         with self.assertRaises(ImproperlyConfigured):
             render_includes()
+
+
+class RequestHeaderTests(SimpleTestCase):
+    """is_ajax() routes on X-Requested-With, so the client must send it to its own origin."""
+
+    @staticmethod
+    def first_inside(guard, statement):
+        js = (Path(__file__).parent / 'static' / 'ajax_helpers' / 'ajax_helpers.js').read_text(encoding='utf-8')
+        lines = [line.strip() for line in js.splitlines()]
+        return any(lines[i] == f'if ({guard}) {{' and lines[i + 1] == statement for i in range(len(lines) - 1))
+
+    def test_fetch_requests_send_it_to_their_own_origin(self):
+        self.assertTrue(self.first_inside('same_origin(config.url)', "headers['X-Requested-With'] = 'XMLHttpRequest';"))
+
+    def test_xhr_requests_send_it_to_their_own_origin(self):
+        self.assertTrue(
+            self.first_inside('same_origin(url)', "xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');")
+        )
+
+    def test_is_ajax_reads_it(self):
+        self.assertTrue(is_ajax(RequestFactory().post('/', HTTP_X_REQUESTED_WITH='XMLHttpRequest')))
+        self.assertFalse(is_ajax(RequestFactory().post('/')))

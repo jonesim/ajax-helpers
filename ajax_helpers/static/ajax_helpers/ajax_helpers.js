@@ -169,9 +169,21 @@ if (typeof ajax_helpers === 'undefined') {
             });
         }
 
+        // As jQuery: X-Requested-With only goes same-origin, as cross-origin it forces a CORS preflight
+        function same_origin(url) {
+            try {
+                return new URL(url, window.location.href).origin === window.location.origin;
+            } catch (e) {
+                return false;
+            }
+        }
+
         function fetch_request(config) {
             var method = config.method || 'get';
             var headers = {};
+            if (same_origin(config.url)) {
+                headers['X-Requested-With'] = 'XMLHttpRequest';
+            }
             if (config.contentType) {
                 headers['Content-Type'] = config.contentType;
             }
@@ -217,6 +229,9 @@ if (typeof ajax_helpers === 'undefined') {
             var xhr = new XMLHttpRequest();
             xhr.open('post', url, !is_sync);
             add_CSRF(xhr);
+            if (same_origin(url)) {
+                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            }
             if (timeout) {
                 xhr.timeout = timeout;
             }
