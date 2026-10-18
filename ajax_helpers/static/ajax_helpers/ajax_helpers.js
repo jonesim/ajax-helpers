@@ -355,7 +355,9 @@ if (typeof ajax_helpers === 'undefined') {
         }
 
         window.addEventListener('popstate', function (e) {
-            get_content(window.location.href, false)
+            // Don't push the url again, but keep window_location in step so later posts go to this page
+            window_location = window.location.href;
+            get_content(window_location, false);
         });
 
         function process_commands(commands) {
