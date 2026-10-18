@@ -7,28 +7,42 @@ from ..utils import random_string
 from ..html_include import html_include
 register = template.Library()
 
+LIBRARIES_INCLUDED = 'ajax_helpers_libraries_included'
+
 
 @register.simple_tag(takes_context=True)
 def lib_include(context, *args, **kwargs):
+    """Each library is written once per render, across extended and included templates."""
     request = context.get('request')
     legacy = False
     if request:
         user_agent = request.META.get('HTTP_USER_AGENT', '')
         if 'Trident' in user_agent or 'MSIE' in user_agent:
             legacy = True
+    included = _libraries_included(context)
     include_str = ''
     if not args:
         include_str = html_include(cdn=kwargs.get('cdn'),
                                    module=kwargs.get('module'),
                                    legacy=legacy,
-                                   version=kwargs.get('version'))
+                                   version=kwargs.get('version'),
+                                   included=included)
     for a in args:
         include_str += html_include(a,
                                     cdn=kwargs.get('cdn'),
                                     module=kwargs.get('module'),
                                     legacy=legacy,
-                                    version=kwargs.get('version'))
+                                    version=kwargs.get('version'),
+                                    included=included)
     return mark_safe(include_str)
+
+
+def _libraries_included(context):
+    # The root of the render context is shared by extended and included templates
+    render_context = getattr(context, 'render_context', None)
+    if render_context is None:
+        return None
+    return render_context.dicts[0].setdefault(LIBRARIES_INCLUDED, set())
 
 
 @register.simple_tag
