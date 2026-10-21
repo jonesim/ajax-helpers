@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ajax-advanced-helpers"
-version = "1.0.5"
+version = "1.0.6"
 description = "Django app to assist with posting Ajax and receiving commands from django"
 readme = "README.md"
 requires-python = ">=3.9"

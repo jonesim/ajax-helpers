@@ -218,11 +218,18 @@ if (typeof ajax_helpers === 'undefined') {
       get_content(window_location, false);
     });
 
+    // See ajax_helpers.js: window.ajax_helpers_busy_poll_ms, when the page sets it, replaces the
+    // 100ms a paused response waits before it looks again.
+    function busy_poll_ms() {
+      var ms = window.ajax_helpers_busy_poll_ms;
+      return typeof ms === 'number' && ms >= 0 ? ms : 100;
+    }
+
     function process_commands(commands) {
       if (ajax_helpers.ajax_busy) {
         window.setTimeout(function () {
           process_commands(commands);
-        }, 100);
+        }, busy_poll_ms());
       } else {
         while (commands.length > 0) {
           var command = commands.shift();
@@ -231,7 +238,7 @@ if (typeof ajax_helpers === 'undefined') {
           if (ajax_helpers.ajax_busy) {
             window.setTimeout(function () {
               process_commands(commands);
-            }, 100);
+            }, busy_poll_ms());
             break;
           }
         }
