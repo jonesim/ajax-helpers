@@ -8,6 +8,7 @@ from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
 from django.views.decorators.csrf import ensure_csrf_cookie
 
+from ajax_helpers.permissions import PERMISSION_DENIED_MESSAGE, is_permitted, refusal
 from ajax_helpers.utils import ajax_command, is_ajax, json_body
 
 
@@ -50,7 +51,10 @@ class AjaxHelpers:
                 response = None
             if response:
                 if 'ajax_method' in response:
-                    method = getattr(self, response.pop('ajax_method'))
+                    name = response.pop('ajax_method')
+                    if (refused := refusal(self, 'ajax_method', name)) is not None:
+                        return refused
+                    method = getattr(self, name)
                     if '_ajax' in inspect.signature(method).parameters:
                         return method(**response)
                     else:
@@ -59,12 +63,23 @@ class AjaxHelpers:
                 else:
                     for t in self.command_set:
                         if t in response and hasattr(self, f'{t}_{response[t]}'):
+                            if (refused := refusal(self, t, response[t])) is not None:
+                                return refused
                             method = getattr(self, f'{t}_{response[t]}')
                             del response[t]
                             return method(**response)
         if hasattr(super(), 'post'):
             # noinspection PyUnresolvedReferences
             return super().post(request, *args, **kwargs)
+
+    def ajax_permission(self, kind, name):
+        """Whether this request may run the handler ``<kind>_<name>`` (``ajax_helpers.permissions``)."""
+        return is_permitted(getattr(self, 'request', None), kind, name, self)
+
+    def ajax_permission_denied(self, kind, name):
+        """Sent instead of running a refused handler. A 200 with a message, not a 403: the page's
+        javascript turns any error status into a generic failure the user cannot read."""
+        return self.command_response('message', text=PERMISSION_DENIED_MESSAGE)
 
     def add_page_command(self, function_name, **kwargs):
         if type(function_name) == list:
@@ -95,6 +110,8 @@ class ReceiveForm:
     def post(self, request, *args, **kwargs):
         if is_ajax(request) and request.content_type == 'multipart/form-data':
             if 'form_id' in request.POST:
+                if (refused := refusal(self, 'form', request.POST['form_id'])) is not None:
+                    return refused
                 return getattr(self, f'form_{request.POST["form_id"]}')(**request.POST.dict())
         # noinspection PyUnresolvedReferences
         return super().post(request, *args, **kwargs)
@@ -124,6 +141,8 @@ class AjaxFileHelpers(AjaxHelpers):
 
     def post(self, request, *args, **kwargs):
         if is_ajax(request) and request.content_type == 'multipart/form-data' and 'ajax_file' in request.FILES:
+            if (refused := refusal(self, 'file_upload', 'ajax_file')) is not None:
+                return refused
             return self.file_upload(request.FILES['ajax_file'])
         return super().post(request, *args, **kwargs)
 
@@ -141,6 +160,8 @@ class AjaxFileUploadMixin:
     # noinspection PyUnresolvedReferences
     def post(self, request, *args, **kwargs):
         if is_ajax(request) and request.content_type == 'multipart/form-data' and self.upload_key in request.FILES:
+            if (refused := refusal(self, 'upload', request.POST.get('upload'))) is not None:
+                return refused
             response = request.POST.dict()
             file = self.request.FILES[self.upload_key]
             upload_params = json.loads(response.get('upload_params', '{}'))
