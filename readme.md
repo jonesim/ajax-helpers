@@ -879,6 +879,17 @@ ajax_helpers.get_content('/dashboard/')
 
 Execute an array of command objects. Commands are queued if `ajax_busy` is true.
 
+A queued response looks at the flag again every 100ms. A page can change that by setting
+`window.ajax_helpers_busy_poll_ms`, which is read each time. Browser tests are the usual reason:
+they act faster than a person, and in the gap between the flag clearing and the queued commands
+running they can start something new, such as opening another modal, that the commands then run
+against. Setting it before the page's scripts run (Playwright's `page.add_init_script`, for
+example) narrows that gap for the test without changing it for anyone else.
+
+```javascript
+window.ajax_helpers_busy_poll_ms = 1;
+```
+
 ```javascript
 ajax_helpers.process_commands([
     {function: 'html', selector: '#msg', html: 'Hello'},

@@ -360,11 +360,20 @@ if (typeof ajax_helpers === 'undefined') {
             get_content(window_location, false);
         });
 
+        // How often a response paused by ajax_busy looks again: 100ms, unless the page sets
+        // window.ajax_helpers_busy_poll_ms. A browser test can turn it down, since it acts
+        // faster than a person and may start something new in the gap between the flag clearing
+        // and the paused commands running.
+        function busy_poll_ms() {
+            var ms = window.ajax_helpers_busy_poll_ms;
+            return typeof ms === 'number' && ms >= 0 ? ms : 100;
+        }
+
         function process_commands(commands) {
             if (ajax_helpers.ajax_busy) {
                 window.setTimeout(function () {
                     process_commands(commands)
-                }, 100)
+                }, busy_poll_ms())
             } else {
                 while (commands.length > 0) {
                     var command = commands.shift();
@@ -372,7 +381,7 @@ if (typeof ajax_helpers === 'undefined') {
                     if (ajax_helpers.ajax_busy) {
                         window.setTimeout(function () {
                             process_commands(commands)
-                        }, 100);
+                        }, busy_poll_ms());
                         break;
                     }
                 }
